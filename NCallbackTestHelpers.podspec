@@ -24,7 +24,7 @@ Pod::Spec.new do |spec|
     spec.dependency 'Quick'
     spec.dependency 'Spry+Nimble'
 
-    spec.dependency 'NEventier'
+    spec.dependency 'NCallback'
 
     spec.frameworks = 'XCTest', 'Foundation'
 

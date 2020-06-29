@@ -1,10 +1,10 @@
 import Foundation
 import Spry
 
-@testable import NRequest
+@testable import NCallback
 
 final
-class FakeCallback<Response, Error: Swift.Error>: Callback<Response, Error>, Spryable {
+class FakeCallback<Response>: Callback<Response>, Spryable {
     enum ClassFunction: String, StringRepresentable {
         case empty
     }
@@ -15,17 +15,15 @@ class FakeCallback<Response, Error: Swift.Error>: Callback<Response, Error>, Spr
         case cancel = "cancel()"
 
         case flatMap = "flatMap(_:)"
-        case map = "map(_:)"
-        case mapError = "mapError(_:)"
     }
 
-    var onCompleteCallback: CompleteCallback?
-    override public func onComplete(kind: CallbackRetainCycle = .selfRetained, _ callback: @escaping CompleteCallback) {
-        self.onCompleteCallback = callback
+    var onComplete: Completion?
+    override public func onComplete(kind: CallbackRetainCycle = .selfRetained, _ callback: @escaping Completion) {
+        self.onComplete = callback
         return spryify(arguments: kind, callback)
     }
 
-    override func complete(_ result: Result<Response, Error>) {
+    override func complete(_ result: Response) {
         return spryify(arguments: result)
     }
 
@@ -33,15 +31,7 @@ class FakeCallback<Response, Error: Swift.Error>: Callback<Response, Error>, Spr
         return spryify()
     }
 
-    override func flatMap<NewResponse, NewError>(_ mapper: @escaping (Result<Response, Error>) -> Result<NewResponse, NewError>) -> Callback<NewResponse, NewError> where NewError: Swift.Error {
-        return spryify(arguments: mapper)
-    }
-
-    override public func map<NewResponse>(_ mapper: @escaping (Response) -> NewResponse) -> Callback<NewResponse, Error> {
-        return spryify(arguments: mapper)
-    }
-
-    override func mapError<NewError>(_ mapper: @escaping (Error) -> NewError) -> Callback<Response, NewError> where NewError: Swift.Error {
+    override func flatMap<NewResponse>(_ mapper: @escaping (Response) -> NewResponse) -> Callback<NewResponse> {
         return spryify(arguments: mapper)
     }
 }
