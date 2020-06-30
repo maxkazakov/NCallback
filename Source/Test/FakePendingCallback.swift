@@ -12,7 +12,7 @@ public class Callback<ResultType> {
     private let start: (Callback<ResultType>) -> Void
     private let stop: (Callback<ResultType>) -> Void
     private var beforeCallback: Completion?
-    private var completeCallback: Completion?
+    private(set) var completeCallback: Completion?
     private var deferredCallback: Completion?
     private let original: Any?
     private var strongyfy: Callback?
@@ -82,7 +82,7 @@ public class Callback<ResultType> {
     @discardableResult
     public func deferred(_ callback: @escaping Completion) -> Self {
         let originalCallback = deferredCallback
-        deferredCallback = { result in
+        self.deferredCallback = { result in
             originalCallback?(result)
             callback(result)
         }
@@ -90,12 +90,11 @@ public class Callback<ResultType> {
         return self
     }
 
-    @available(*, deprecated, message: "use PendingCallback instead")
     public func andThen() -> Self {
         let copy = Self(start: { _ in })
 
-        _ = deferred { [weak copy] in
-            copy?.complete($0)
+        _ = deferred {
+            copy.complete($0)
         }
 
         return copy
