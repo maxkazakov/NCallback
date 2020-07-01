@@ -3,20 +3,20 @@ import Spry
 
 @testable import NCallback
 
-typealias FakeResultPendingCallback<Response, Error: Swift.Error> = FakePendingCallback<Result<Response, Error>>
+public typealias FakeResultPendingCallback<Response, Error: Swift.Error> = FakePendingCallback<Result<Response, Error>>
 
 final
-class FakePendingCallback<Response>: PendingCallback<Response>, Spryable {
-    enum ClassFunction: String, StringRepresentable {
+public class FakePendingCallback<Response>: PendingCallback<Response>, Spryable {
+    public enum ClassFunction: String, StringRepresentable {
         case empty
     }
 
-    enum Function: String, StringRepresentable {
+    public enum Function: String, StringRepresentable {
         case current = "current()"
     }
 
-    var closure: ServiceClosure?
-    override func current(_ closure: @escaping ServiceClosure = { _ in }) -> Callback {
+    public var closure: ServiceClosure?
+    public override func current(_ closure: @escaping ServiceClosure = { _ in }) -> Callback {
         self.closure = closure
         return spryify()
     }

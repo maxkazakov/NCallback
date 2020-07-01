@@ -8,6 +8,8 @@ public enum CallbackOption {
     public static let `default`: CallbackOption = .selfRetained
 }
 
+public typealias ResultCallback<Response, Error: Swift.Error> = Callback<Result<Response, Error>>
+
 public class Callback<ResultType> {
     public typealias Completion = (_ result: ResultType) -> Void
     public typealias ServiceClosure = (Callback) -> Void
@@ -19,6 +21,8 @@ public class Callback<ResultType> {
     private var deferredCallback: Completion?
     private var strongyfy: Callback?
     private var options: CallbackOption = .default
+
+    public var hashKey: String?
 
     public required init(start: @escaping ServiceClosure,
                          stop: @escaping ServiceClosure = { _ in }) {
@@ -80,9 +84,9 @@ public class Callback<ResultType> {
     }
 
     // MARK: - mapping
-    public func flatMap<NewResponse>(_ mapper: @escaping (ResultType) -> NewResponse) -> Callback<NewResponse> {
-        let copy = Callback<NewResponse>(start: { _ in self.start(self) },
-                                         stop: { _ in self.stop(self) })
+    public func flatMap<NewResultType>(_ mapper: @escaping (ResultType) -> NewResultType) -> Callback<NewResultType> {
+        let copy = Callback<NewResultType>(start: { _ in self.start(self) },
+                                           stop: { _ in self.stop(self) })
         let originalCallback = completeCallback
         completeCallback = { [weak copy] result in
             originalCallback?(result)
@@ -93,7 +97,7 @@ public class Callback<ResultType> {
 
     // MARK: - defer
     @discardableResult
-    public func deferred(_ callback: @escaping Completion) -> Self {
+    public func deferred(_ callback: @escaping Completion) -> Callback<ResultType> {
         let originalCallback = deferredCallback
         deferredCallback = { result in
             originalCallback?(result)
@@ -103,19 +107,8 @@ public class Callback<ResultType> {
         return self
     }
 
-    @available(*, deprecated, message: "use PendingCallback instead")
-    public func andThen() -> Self {
-        let copy = Self(start: { _ in })
-
-        _ = deferred { [weak copy] in
-            copy?.complete($0)
-        }
-
-        return copy
-    }
-
     @discardableResult
-    public func beforeComplete(_ callback: @escaping Completion) -> Self {
+    public func beforeComplete(_ callback: @escaping Completion) -> Callback<ResultType> {
         let originalCallback = beforeCallback
         self.beforeCallback = { result in
             originalCallback?(result)
@@ -124,18 +117,74 @@ public class Callback<ResultType> {
 
         return self
     }
+
+    // MARK: - ResultCallback
+    public func complete<Response, Error: Swift.Error>(_ response: Response) where ResultType == Result<Response, Error> {
+        complete(.success(response))
+    }
+
+    public func complete<Response, Error: Swift.Error>(_ error: Error) where ResultType == Result<Response, Error> {
+        complete(.failure(error))
+    }
+
+    public func onSuccess<Response, Error: Swift.Error>(options: CallbackOption = .default,
+                                                        _ callback: @escaping (_ result: Response) -> Void) where ResultType == Result<Response, Error> {
+        onComplete(options: options) {
+            switch $0 {
+            case .success(let value):
+                callback(value)
+            case .failure:
+                break
+            }
+        }
+    }
+
+    public func map<NewResponse, Response, Error: Swift.Error>(_ mapper: @escaping (Response) -> NewResponse) -> ResultCallback<NewResponse, Error>
+        where ResultType == Result<Response, Error> {
+            return flatMap { return $0.map(mapper) }
+    }
+
+    public func mapError<Response, Error: Swift.Error, NewError: Swift.Error>(_ mapper: @escaping (Error) -> NewError) -> ResultCallback<Response, NewError>
+        where ResultType == Result<Response, Error> {
+            return flatMap { return $0.mapError(mapper) }
+    }
+
+    public class func success<Response, Error>(_ result: @escaping @autoclosure () -> Response) -> ResultCallback<Response, Error>
+        where ResultType == Result<Response, Error> {
+            return Callback {
+                return .success(result())
+            }
+    }
+
+    public class func failure<Response, Error>(_ result: @escaping @autoclosure () -> Error) -> ResultCallback<Response, Error>
+        where ResultType == Result<Response, Error> {
+            return Callback {
+                return .failure(result())
+            }
+    }
 }
 
+// MARK: - Hashable
 extension Callback: Hashable {
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(ObjectIdentifier(self))
+        hashKey.map({ hasher.combine($0) }) ?? hasher.combine(ObjectIdentifier(self))
     }
 
     public static func == (lhs: Callback, rhs: Callback) -> Bool {
-        return lhs === rhs
+        switch (lhs.hashKey, rhs.hashKey) {
+        case (.some(let a), .some(let b)):
+            return a == b
+        case (.some, _):
+            return false
+        case (_, .some):
+            return false
+        case (.none, .none):
+            return lhs === rhs
+        }
     }
 }
 
+// MARK: - zip
 public func zip<ResponseA, ResponseB>(_ lhs: Callback<ResponseA>,
                                       _ rhs: Callback<ResponseB>,
                                       _ completion: @escaping (ResponseA, ResponseB) -> Void) {
@@ -162,4 +211,19 @@ public func zip<ResponseA, ResponseB>(_ lhs: Callback<ResponseA>,
     }
 
     task()
+}
+
+public func zip<ResponseA, ResponseB, Error: Swift.Error>(_ lhs: ResultCallback<ResponseA, Error>,
+                                                          _ rhs: ResultCallback<ResponseB, Error>,
+                                                          _ completion: @escaping (Result<(ResponseA, ResponseB), Error>) -> Void) {
+    zip(lhs, rhs) {
+        switch ($0, $1) {
+        case (.success(let a), .success(let b)):
+            completion(.success((a, b)))
+        case (.failure(let error), _):
+            completion(.failure(error))
+        case (_, .failure(let error)):
+            completion(.failure(error))
+        }
+    }
 }
