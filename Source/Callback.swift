@@ -1,8 +1,11 @@
 import Foundation
 
-public enum CallbackRetainCycle {
+public enum CallbackOption {
     case selfRetained
     case weakness
+    case repeatable
+
+    public static let `default`: CallbackOption = .selfRetained
 }
 
 public class Callback<ResultType> {
@@ -14,19 +17,21 @@ public class Callback<ResultType> {
     private var beforeCallback: Completion?
     private var completeCallback: Completion?
     private var deferredCallback: Completion?
-    private let original: Any?
     private var strongyfy: Callback?
+    private var options: CallbackOption = .default
 
     public required init(start: @escaping ServiceClosure,
-                         stop: @escaping ServiceClosure = { _ in },
-                         original: Any? = nil) {
+                         stop: @escaping ServiceClosure = { _ in }) {
         self.start = start
         self.stop = stop
-        self.original = original
     }
 
     public convenience init(result: @escaping () -> ResultType) {
         self.init(start: { $0.complete(result()) })
+    }
+
+    public convenience init() {
+        self.init(start: { _ in })
     }
 
     deinit {
@@ -38,7 +43,13 @@ public class Callback<ResultType> {
         beforeCallback?(result)
         completeCallback?(result)
         deferredCallback?(result)
-        strongyfy = nil
+
+        switch options {
+        case .weakness, .selfRetained:
+            strongyfy = nil
+        case .repeatable:
+            break
+        }
     }
 
     public func cancel() {
@@ -47,29 +58,31 @@ public class Callback<ResultType> {
         strongyfy = nil
     }
 
-    public func onComplete(kind: CallbackRetainCycle = .selfRetained, _ callback: @escaping Completion) {
-        switch kind {
+    public func onComplete(options: CallbackOption = .default, _ callback: @escaping Completion) {
+        self.options = options
+
+        switch options {
         case .selfRetained:
             strongyfy = self
-        case .weakness:
-            strongyfy = nil
+        case .repeatable,
+             .weakness:
+            break
         }
 
-        assert(completeCallback == nil)
+        assert(completeCallback == nil, "was configured twice, please check it!")
         completeCallback = callback
 
         start(self)
     }
 
-    public func oneWay(kind: CallbackRetainCycle = .selfRetained) {
-        onComplete(kind: kind, { _ in })
+    public func oneWay(options: CallbackOption = .default) {
+        onComplete(options: options, { _ in })
     }
 
     // MARK: - mapping
     public func flatMap<NewResponse>(_ mapper: @escaping (ResultType) -> NewResponse) -> Callback<NewResponse> {
-        let copy = Callback<NewResponse>(start: { [weak self] _ in self.map({ $0.start($0) }) },
-                                         stop: { [weak self] _ in self.map({ $0.stop($0) }) },
-                                         original: self)
+        let copy = Callback<NewResponse>(start: { _ in self.start(self) },
+                                         stop: { _ in self.stop(self) })
         let originalCallback = completeCallback
         completeCallback = { [weak copy] result in
             originalCallback?(result)

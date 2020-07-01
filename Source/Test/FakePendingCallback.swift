@@ -15,11 +15,9 @@ class FakePendingCallback<Response>: PendingCallback<Response>, Spryable {
         case current = "current()"
     }
 
-    convenience init() {
-        self.init(generator: { fatalError("must be stubbed") })
-    }
-
-    override func current() -> Callback<Response> {
+    var closure: ServiceClosure?
+    override func current(_ closure: @escaping ServiceClosure = { _ in }) -> Callback {
+        self.closure = closure
         return spryify()
     }
 }

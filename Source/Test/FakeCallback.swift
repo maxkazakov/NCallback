@@ -18,9 +18,9 @@ class FakeCallback<Response>: Callback<Response>, Spryable {
     }
 
     var onComplete: Completion?
-    override public func onComplete(kind: CallbackRetainCycle = .selfRetained, _ callback: @escaping Completion) {
+    override public func onComplete(options: CallbackOption = .default, _ callback: @escaping Completion) {
         self.onComplete = callback
-        return spryify(arguments: kind, callback)
+        return spryify(arguments: options, callback)
     }
 
     override func complete(_ result: Response) {

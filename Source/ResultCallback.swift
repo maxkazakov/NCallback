@@ -12,9 +12,9 @@ extension Callback {
         complete(.failure(error))
     }
 
-    public func onSuccess<Response, Error: Swift.Error>(kind: CallbackRetainCycle = .selfRetained,
+    public func onSuccess<Response, Error: Swift.Error>(options: CallbackOption = .default,
                                                         _ callback: @escaping (_ result: Response) -> Void) where ResultType == Result<Response, Error> {
-        onComplete(kind: kind) {
+        onComplete(options: options) {
             switch $0 {
             case .success(let value):
                 callback(value)
