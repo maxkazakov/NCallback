@@ -36,8 +36,8 @@ public class PendingCallback<ResultType> {
         if let current = cached {
             result = .init()
 
-            _ = current.deferred { [weak result] in
-                result?.complete($0)
+            _ = current.deferred { [result] in
+                result.complete($0)
             }
         } else {
             result = generator(closure)

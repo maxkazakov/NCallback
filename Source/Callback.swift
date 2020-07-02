@@ -87,6 +87,7 @@ public class Callback<ResultType> {
     public func flatMap<NewResultType>(_ mapper: @escaping (ResultType) -> NewResultType) -> Callback<NewResultType> {
         let copy = Callback<NewResultType>(start: { _ in self.start(self) },
                                            stop: { _ in self.stop(self) })
+        copy.hashKey = hashKey
         let originalCallback = completeCallback
         completeCallback = { [weak copy] result in
             originalCallback?(result)
