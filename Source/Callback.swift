@@ -34,6 +34,10 @@ public class Callback<ResultType> {
         self.init(start: { $0.complete(result()) })
     }
 
+    public convenience init(result: @escaping @autoclosure () -> ResultType) {
+        self.init(start: { $0.complete(result()) })
+    }
+
     public convenience init() {
         self.init(start: { _ in })
     }
@@ -49,7 +53,8 @@ public class Callback<ResultType> {
         deferredCallback?(result)
 
         switch options {
-        case .weakness, .selfRetained:
+        case .weakness,
+             .selfRetained:
             strongyfy = nil
         case .repeatable:
             break
