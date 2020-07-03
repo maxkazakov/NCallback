@@ -8,6 +8,17 @@ import Spry
 @testable import NCallback
 @testable import NCallbackTestHelpers
 
+private typealias ResultSubjectWrapper<Value, Error: Swift.Error> = SubjectWrapper<Result<Value, Error>>
+
+private enum TestError: Swift.Error, Equatable {
+    case anyError1
+    case anyError2
+}
+
+private enum TestError2: Swift.Error, Equatable {
+    case anyError
+}
+
 private final class SubjectWrapper<Value> {
     private(set) weak var weakValue: Callback<Value>?
     var value: Callback<Value>!
@@ -45,7 +56,7 @@ class CallbackSpec: QuickSpec {
     }
 
     override func spec() {
-        fdescribe("Callback") {
+        describe("Callback") {
             var wrapper: SubjectWrapper<Int>!
             var subject: Callback<Int>! {
                 get {
@@ -135,6 +146,440 @@ class CallbackSpec: QuickSpec {
             }
 
             sharedExamples(Constant.deffered) {
+                describe("lifecycle") {
+                    var result: Int!
+
+                    afterEach {
+                        wrapper.stopped = false
+                        result = nil
+                    }
+
+                    describe("weakness") {
+                        beforeEach {
+                            subject.onComplete(options: .weakness, { result = $0 })
+                        }
+
+                        context("when destructed before completion") {
+                            beforeEach {
+                                subject = nil
+                                wrapper.action?(1)
+                            }
+
+                            it("should not receive result") {
+                                expect(result).to(beNil())
+                            }
+
+                            it("should call stop on deinit") {
+                                expect(wrapper.stopped).to(beTrue())
+                            }
+                        }
+
+                        context("when complete correctly and destructed") {
+                            beforeEach {
+                                wrapper.action?(1)
+                                wrapper.value = nil
+                            }
+
+                            it("should receive result") {
+                                expect(result).to(equal(1))
+                            }
+
+                            it("should call stop on deinit") {
+                                expect(wrapper.stopped).to(beTrue())
+                            }
+                        }
+                    }
+
+                    describe("selfRetained") {
+                        beforeEach {
+                            subject.onComplete(options: .selfRetained, { result = $0 })
+                            subject = nil
+                        }
+
+                        context("when cant be destructed before completion") {
+                            beforeEach {
+                                wrapper.stopped = false
+                            }
+
+                            it("should not receive result") {
+                                expect(result).to(beNil())
+                            }
+
+                            it("should not call stop") {
+                                expect(wrapper.stopped).to(beFalse())
+                            }
+
+                            context("when complete correctly and destructed") {
+                                beforeEach {
+                                    wrapper.action?(2)
+                                }
+
+                                it("should receive result") {
+                                    expect(result).to(equal(2))
+                                }
+
+                                it("should call stop on deinit") {
+                                    expect(wrapper.stopped).to(beTrue())
+                                }
+                            }
+                        }
+
+                        context("when complete correctly and destructed") {
+                            beforeEach {
+                                wrapper.stopped = false
+                                wrapper.action?(1)
+                            }
+
+                            it("should receive result") {
+                                expect(result).to(equal(1))
+                            }
+
+                            it("should call stop on deinit") {
+                                expect(wrapper.stopped).to(beTrue())
+                            }
+                        }
+                    }
+
+                    describe("repeatable") {
+                        beforeEach {
+                            subject.onComplete(options: .repeatable, { result = $0 })
+                        }
+
+                        context("when destructed before completion") {
+                            beforeEach {
+                                wrapper.stopped = false
+                                subject = nil
+                                wrapper.action?(1)
+                            }
+
+                            it("should not receive result") {
+                                expect(result).to(beNil())
+                            }
+
+                            it("should call stop on deinit") {
+                                expect(wrapper.stopped).to(beTrue())
+                            }
+                        }
+
+                        context("when complete correctly and destructed") {
+                            beforeEach {
+                                wrapper.stopped = false
+                                wrapper.action?(1)
+                            }
+
+                            it("should receive result") {
+                                expect(result).to(equal(1))
+                            }
+
+                            it("should not call stop") {
+                                expect(wrapper.stopped).to(beFalse())
+                            }
+
+                            context("when completed twice") {
+                                beforeEach {
+                                    wrapper.stopped = false
+                                    wrapper.action?(2)
+                                }
+
+                                it("should receive result") {
+                                    expect(result).to(equal(2))
+                                }
+
+                                it("should not call stop") {
+                                    expect(wrapper.stopped).to(beFalse())
+                                }
+
+                                context("when destructed before") {
+                                    beforeEach {
+                                        wrapper.stopped = false
+                                        result = nil
+                                        subject = nil
+                                        wrapper.action?(1)
+                                    }
+
+                                    it("should not receive result") {
+                                        expect(result).to(beNil())
+                                    }
+
+                                    it("should call stop on deinit") {
+                                        expect(wrapper.stopped).to(beTrue())
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    describe("oneWay") {
+                        beforeEach {
+                            subject.oneWay(options: .selfRetained)
+                        }
+
+                        context("when cant be destructed before completion") {
+                            beforeEach {
+                                wrapper.stopped = false
+                                subject = nil
+                            }
+
+                            it("should not receive result") {
+                                expect(result).to(beNil())
+                            }
+
+                            it("should not call stop") {
+                                expect(wrapper.stopped).to(beFalse())
+                            }
+
+                            context("when complete correctly and destructed") {
+                                beforeEach {
+                                    wrapper.action?(2)
+                                }
+
+                                it("should receive result") {
+                                    expect(result).to(beNil())
+                                }
+
+                                it("should call stop on deinit") {
+                                    expect(wrapper.stopped).to(beTrue())
+                                }
+                            }
+                        }
+
+                        context("when complete correctly and destructed") {
+                            beforeEach {
+                                wrapper.stopped = false
+                                subject = nil
+                                wrapper.action?(1)
+                            }
+
+                            it("should receive result") {
+                                expect(result).to(beNil())
+                            }
+
+                            it("should call stop on deinit") {
+                                expect(wrapper.stopped).to(beTrue())
+                            }
+                        }
+                    }
+
+                    describe("beforeComplete and deferred") {
+                        enum Events: Hashable {
+                            case beforeComplete
+                            case onComplete
+                            case deferred
+                        }
+                        var events: [Events]!
+
+                        beforeEach {
+                            events = []
+
+                            subject.onComplete({ _ in events.append(.onComplete) })
+                            subject.beforeComplete({ _ in events.append(.beforeComplete) })
+                            subject.deferred({ _ in events.append(.deferred) })
+
+                            wrapper.action?(1)
+                        }
+
+                        it("should resolve events in correct order") {
+                            let expected: [Events] = [.beforeComplete, .onComplete, .deferred]
+                            expect(events).to(equal(expected))
+                        }
+                    }
+
+                    describe("Hashable") {
+                        var subject2: Callback<Int>!
+
+                        beforeEach {
+                            subject2 = .init()
+                        }
+
+                        context("when hashing by ref") {
+                            beforeEach {
+                                subject.hashKey = nil
+                                subject2.hashKey = nil
+                            }
+
+                            it("should not equal") {
+                                expect(subject).toNot(equal(subject2))
+                            }
+
+                            it("should generate different hashes") {
+                                expect(subject.hashValue).toNot(equal(subject2.hashValue))
+                            }
+                        }
+
+                        context("when hashing both by hashKey") {
+                            beforeEach {
+                                subject.hashKey = "123"
+                                subject2.hashKey = "123"
+                            }
+
+                            it("should be equal") {
+                                expect(subject).to(equal(subject2))
+                            }
+
+                            it("should generate same hashes") {
+                                expect(subject.hashValue).to(equal(subject2.hashValue))
+                            }
+                        }
+
+                        context("when hashing the first by hashKey") {
+                            beforeEach {
+                                subject.hashKey = "123"
+                                subject2.hashKey = nil
+                            }
+
+                            it("should not equal") {
+                                expect(subject).toNot(equal(subject2))
+                            }
+
+                            it("should generate different hashes") {
+                                expect(subject.hashValue).toNot(equal(subject2.hashValue))
+                            }
+                        }
+
+                        context("when hashing the second by hashKey") {
+                            beforeEach {
+                                subject.hashKey = nil
+                                subject2.hashKey = "123"
+                            }
+
+                            it("should not equal") {
+                                expect(subject).toNot(equal(subject2))
+                            }
+
+                            it("should generate different hashes") {
+                                expect(subject.hashValue).toNot(equal(subject2.hashValue))
+                            }
+                        }
+                    }
+
+                    describe("zip") {
+                        var result: (Int, Bool)!
+                        var wrapper2: SubjectWrapper<Bool>!
+                        var subject2: Callback<Bool>! {
+                            get {
+                                wrapper2.value
+                            }
+                            set {
+                                wrapper2.set(newValue)
+                            }
+                        }
+
+                        var zipped: Callback<(Int, Bool)>!
+
+                        beforeEach {
+                            wrapper2 = .init()
+                            subject2 = .init(start: wrapper2.start,
+                                             stop: wrapper2.stop)
+
+                            zipped = zip(subject, subject2)
+                        }
+
+                        afterEach {
+                            subject = nil
+                            subject2 = nil
+                            zipped = nil
+                        }
+
+                        it("should not start yet") {
+                            expect(wrapper.started).to(beFalse())
+                            expect(wrapper2.started).to(beFalse())
+                        }
+
+                        context("when started") {
+                            beforeEach {
+                                zipped.onComplete(options: .weakness) {
+                                    result = $0
+                                }
+                            }
+
+                            afterEach {
+                                result = nil
+                            }
+
+                            it("should not start yet") {
+                                expect(wrapper.started).to(beTrue())
+                                expect(wrapper2.started).to(beTrue())
+                            }
+
+                            it("should not receive result") {
+                                expect(result).to(beNil())
+                            }
+
+                            context("when resolved the first") {
+                                beforeEach {
+                                    wrapper.action?(1)
+                                }
+
+                                it("should not receive result") {
+                                    expect(result).to(beNil())
+                                }
+
+                                context("when resolved the second") {
+                                    beforeEach {
+                                        wrapper2.action?(true)
+                                    }
+
+                                    it("should receive result") {
+                                        expect(result.0).to(equal(1))
+                                        expect(result.1).to(beTrue())
+                                    }
+
+                                    context("when both are completed") {
+                                        beforeEach {
+                                            wrapper.value = nil
+                                            wrapper2.value = nil
+                                        }
+
+                                        it("should stopped and removed from memory") {
+                                            expect(wrapper.stopped).to(beTrue())
+                                            expect(wrapper2.stopped).to(beTrue())
+
+                                            expect(wrapper.weakValue).to(beNil())
+                                            expect(wrapper2.weakValue).to(beNil())
+                                        }
+                                    }
+                                }
+                            }
+
+                            context("when resolved the second") {
+                                beforeEach {
+                                    wrapper2.action?(true)
+                                }
+
+                                it("should not receive result") {
+                                    expect(result).to(beNil())
+                                }
+
+                                context("when resolved the first") {
+                                    beforeEach {
+                                        wrapper.action?(2)
+                                    }
+
+                                    it("should receive result") {
+                                        expect(result.0).to(equal(2))
+                                        expect(result.1).to(beTrue())
+                                    }
+
+                                    context("when both are completed") {
+                                        beforeEach {
+                                            wrapper.value = nil
+                                            wrapper2.value = nil
+                                        }
+
+                                        it("should stopped and removed from memory") {
+                                            expect(wrapper.stopped).to(beTrue())
+                                            expect(wrapper2.stopped).to(beTrue())
+
+                                            expect(wrapper.weakValue).to(beNil())
+                                            expect(wrapper2.weakValue).to(beNil())
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 describe("flatMap") {
                     var result: Bool!
                     var originalResult: Int!
@@ -280,322 +725,33 @@ class CallbackSpec: QuickSpec {
                     }
                 }
             }
+        }
 
-            describe("lifecycle") {
-                var result: Int!
+        describe("ResultCallback") {
+            var wrapper: ResultSubjectWrapper<Int, TestError>!
+            var subject: ResultCallback<Int, TestError>! {
+                get {
+                    wrapper.value
+                }
+                set {
+                    wrapper.set(newValue)
+                }
+            }
 
+            beforeEach {
+                wrapper = .init()
+            }
+
+            describe("instances") {
                 beforeEach {
                     subject = .init(start: wrapper.start,
                                     stop: wrapper.stop)
                 }
 
-                afterEach {
-                    wrapper.stopped = false
-                    result = nil
-                }
-
-                describe("weakness") {
-                    beforeEach {
-                        subject.onComplete(options: .weakness, { result = $0 })
-                    }
-
-                    context("when destructed before completion") {
-                        beforeEach {
-                            subject = nil
-                            wrapper.action?(1)
-                        }
-
-                        it("should not receive result") {
-                            expect(result).to(beNil())
-                        }
-
-                        it("should call stop on deinit") {
-                            expect(wrapper.stopped).to(beTrue())
-                        }
-                    }
-
-                    context("when complete correctly and destructed") {
-                        beforeEach {
-                            wrapper.action?(1)
-                            wrapper.value = nil
-                        }
-
-                        it("should receive result") {
-                            expect(result).to(equal(1))
-                        }
-
-                        it("should call stop on deinit") {
-                            expect(wrapper.stopped).to(beTrue())
-                        }
-                    }
-                }
-
-                describe("selfRetained") {
-                    beforeEach {
-                        subject.onComplete(options: .selfRetained, { result = $0 })
-                        subject = nil
-                    }
-
-                    context("when cant be destructed before completion") {
-                        beforeEach {
-                            wrapper.stopped = false
-                        }
-
-                        it("should not receive result") {
-                            expect(result).to(beNil())
-                        }
-
-                        it("should not call stop") {
-                            expect(wrapper.stopped).to(beFalse())
-                        }
-
-                        context("when complete correctly and destructed") {
-                            beforeEach {
-                                wrapper.action?(2)
-                            }
-
-                            it("should receive result") {
-                                expect(result).to(equal(2))
-                            }
-
-                            it("should call stop on deinit") {
-                                expect(wrapper.stopped).to(beTrue())
-                            }
-                        }
-                    }
-
-                    context("when complete correctly and destructed") {
-                        beforeEach {
-                            wrapper.stopped = false
-                            wrapper.action?(1)
-                        }
-
-                        it("should receive result") {
-                            expect(result).to(equal(1))
-                        }
-
-                        it("should call stop on deinit") {
-                            expect(wrapper.stopped).to(beTrue())
-                        }
-                    }
-                }
-
-                describe("repeatable") {
-                    beforeEach {
-                        subject.onComplete(options: .repeatable, { result = $0 })
-                    }
-
-                    context("when destructed before completion") {
-                        beforeEach {
-                            wrapper.stopped = false
-                            subject = nil
-                            wrapper.action?(1)
-                        }
-
-                        it("should not receive result") {
-                            expect(result).to(beNil())
-                        }
-
-                        it("should call stop on deinit") {
-                            expect(wrapper.stopped).to(beTrue())
-                        }
-                    }
-
-                    context("when complete correctly and destructed") {
-                        beforeEach {
-                            wrapper.stopped = false
-                            wrapper.action?(1)
-                        }
-
-                        it("should receive result") {
-                            expect(result).to(equal(1))
-                        }
-
-                        it("should not call stop") {
-                            expect(wrapper.stopped).to(beFalse())
-                        }
-
-                        context("when completed twice") {
-                            beforeEach {
-                                wrapper.stopped = false
-                                wrapper.action?(2)
-                            }
-
-                            it("should receive result") {
-                                expect(result).to(equal(2))
-                            }
-
-                            it("should not call stop") {
-                                expect(wrapper.stopped).to(beFalse())
-                            }
-
-                            context("when destructed before") {
-                                beforeEach {
-                                    wrapper.stopped = false
-                                    result = nil
-                                    subject = nil
-                                    wrapper.action?(1)
-                                }
-
-                                it("should not receive result") {
-                                    expect(result).to(beNil())
-                                }
-
-                                it("should call stop on deinit") {
-                                    expect(wrapper.stopped).to(beTrue())
-                                }
-                            }
-                        }
-                    }
-                }
-
-                describe("oneWay") {
-                    beforeEach {
-                        subject.oneWay(options: .selfRetained)
-                    }
-
-                    context("when cant be destructed before completion") {
-                        beforeEach {
-                            wrapper.stopped = false
-                            subject = nil
-                        }
-
-                        it("should not receive result") {
-                            expect(result).to(beNil())
-                        }
-
-                        it("should not call stop") {
-                            expect(wrapper.stopped).to(beFalse())
-                        }
-
-                        context("when complete correctly and destructed") {
-                            beforeEach {
-                                wrapper.action?(2)
-                            }
-
-                            it("should receive result") {
-                                expect(result).to(beNil())
-                            }
-
-                            it("should call stop on deinit") {
-                                expect(wrapper.stopped).to(beTrue())
-                            }
-                        }
-                    }
-
-                    context("when complete correctly and destructed") {
-                        beforeEach {
-                            wrapper.stopped = false
-                            subject = nil
-                            wrapper.action?(1)
-                        }
-
-                        it("should receive result") {
-                            expect(result).to(beNil())
-                        }
-
-                        it("should call stop on deinit") {
-                            expect(wrapper.stopped).to(beTrue())
-                        }
-                    }
-                }
-
-                describe("beforeComplete and deferred") {
-                    enum Events: Hashable {
-                        case beforeComplete
-                        case onComplete
-                        case deferred
-                    }
-                    var events: [Events]!
-
-                    beforeEach {
-                        events = []
-
-                        subject.onComplete({ _ in events.append(.onComplete) })
-                        subject.beforeComplete({ _ in events.append(.beforeComplete) })
-                        subject.deferred({ _ in events.append(.deferred) })
-
-                        wrapper.action?(1)
-                    }
-
-                    it("should resolve events in correct order") {
-                        let expected: [Events] = [.beforeComplete, .onComplete, .deferred]
-                        expect(events).to(equal(expected))
-                    }
-                }
-
-                describe("Hashable") {
-                    var subject2: Callback<Int>!
-
-                    beforeEach {
-                        subject2 = .init()
-                    }
-
-                    context("when hashing by ref") {
-                        beforeEach {
-                            subject.hashKey = nil
-                            subject2.hashKey = nil
-                        }
-
-                        it("should not equal") {
-                            expect(subject).toNot(equal(subject2))
-                        }
-
-                        it("should generate different hashes") {
-                            expect(subject.hashValue).toNot(equal(subject2.hashValue))
-                        }
-                    }
-
-                    context("when hashing both by hashKey") {
-                        beforeEach {
-                            subject.hashKey = "123"
-                            subject2.hashKey = "123"
-                        }
-
-                        it("should be equal") {
-                            expect(subject).to(equal(subject2))
-                        }
-
-                        it("should generate same hashes") {
-                            expect(subject.hashValue).to(equal(subject2.hashValue))
-                        }
-                    }
-
-                    context("when hashing the first by hashKey") {
-                        beforeEach {
-                            subject.hashKey = "123"
-                            subject2.hashKey = nil
-                        }
-
-                        it("should not equal") {
-                            expect(subject).toNot(equal(subject2))
-                        }
-
-                        it("should generate different hashes") {
-                            expect(subject.hashValue).toNot(equal(subject2.hashValue))
-                        }
-                    }
-
-                    context("when hashing the second by hashKey") {
-                        beforeEach {
-                            subject.hashKey = nil
-                            subject2.hashKey = "123"
-                        }
-
-                        it("should not equal") {
-                            expect(subject).toNot(equal(subject2))
-                        }
-
-                        it("should generate different hashes") {
-                            expect(subject.hashValue).toNot(equal(subject2.hashValue))
-                        }
-                    }
-                }
-
                 describe("zip") {
-                    var result: (Int, Bool)!
-                    var wrapper2: SubjectWrapper<Bool>!
-                    var subject2: Callback<Bool>! {
+                    var result: Result<(Int, Bool), TestError>!
+                    var wrapper2: ResultSubjectWrapper<Bool, TestError>!
+                    var subject2: ResultCallback<Bool, TestError>! {
                         get {
                             wrapper2.value
                         }
@@ -604,7 +760,7 @@ class CallbackSpec: QuickSpec {
                         }
                     }
 
-                    var zipped: Callback<(Int, Bool)>!
+                    var zipped: ResultCallback<(Int, Bool), TestError>!
 
                     beforeEach {
                         wrapper2 = .init()
@@ -614,6 +770,86 @@ class CallbackSpec: QuickSpec {
                         zipped = zip(subject, subject2)
                     }
 
+                    afterEach {
+                        subject = nil
+                        subject2 = nil
+                        zipped = nil
+                    }
+
+                    let itBehavesLikeFirstWithError: (Bool) -> Void = { independent in
+                        context("when resolved the first with error") {
+                            beforeEach {
+                                wrapper.action?(.failure(.anyError1))
+                            }
+
+                            it("should receive result") {
+                                expect(result.error).to(equal(.anyError1))
+                            }
+
+                            it("should not call stop") {
+                                expect(wrapper.stopped).to(beFalse())
+                            }
+
+                            if independent {
+                                it("should call stop") {
+                                    expect(wrapper2.stopped).to(beTrue())
+                                }
+                            }
+
+                            context("when both are completed") {
+                                beforeEach {
+                                    wrapper.value = nil
+                                    wrapper2.value = nil
+                                }
+
+                                it("should stopped and removed from memory") {
+                                    expect(wrapper.stopped).to(beTrue())
+                                    expect(wrapper2.stopped).to(beTrue())
+
+                                    expect(wrapper.weakValue).to(beNil())
+                                    expect(wrapper2.weakValue).to(beNil())
+                                }
+                            }
+                        }
+                    }
+
+                    let itBehavesLikeSecondWithError: (Bool) -> Void = { independent in
+                        context("when resolved the second with error") {
+                            beforeEach {
+                                wrapper2.action?(.failure(.anyError2))
+                            }
+
+                            it("should receive result") {
+                                expect(result.error).to(equal(.anyError2))
+                            }
+
+                            it("should not call stop") {
+                                expect(wrapper2.stopped).to(beFalse())
+                            }
+
+                            if independent {
+                                it("should call stop") {
+                                    expect(wrapper.stopped).to(beTrue())
+                                }
+                            }
+
+                            context("when both are completed") {
+                                beforeEach {
+                                    wrapper.value = nil
+                                    wrapper2.value = nil
+                                }
+
+                                it("should stopped and removed from memory") {
+                                    expect(wrapper.stopped).to(beTrue())
+                                    expect(wrapper2.stopped).to(beTrue())
+
+                                    expect(wrapper.weakValue).to(beNil())
+                                    expect(wrapper2.weakValue).to(beNil())
+                                }
+                            }
+                        }
+                    }
+
                     it("should not start yet") {
                         expect(wrapper.started).to(beFalse())
                         expect(wrapper2.started).to(beFalse())
@@ -621,7 +857,7 @@ class CallbackSpec: QuickSpec {
 
                     context("when started") {
                         beforeEach {
-                            zipped.onComplete(options: .selfRetained) {
+                            zipped.onComplete(options: .weakness) {
                                 result = $0
                             }
                         }
@@ -639,9 +875,22 @@ class CallbackSpec: QuickSpec {
                             expect(result).to(beNil())
                         }
 
+                        context("should selfRetain both") {
+                            beforeEach {
+                                wrapper.value = nil
+                                wrapper2.value = nil
+                                zipped = nil
+                            }
+
+                            it("should not call stop") {
+                                expect(wrapper.stopped).to(beFalse())
+                                expect(wrapper2.stopped).to(beFalse())
+                            }
+                        }
+
                         context("when resolved the first") {
                             beforeEach {
-                                wrapper.action?(1)
+                                wrapper.action?(.success(1))
                             }
 
                             it("should not receive result") {
@@ -650,19 +899,37 @@ class CallbackSpec: QuickSpec {
 
                             context("when resolved the second") {
                                 beforeEach {
-                                    wrapper2.action?(true)
+                                    wrapper2.action?(.success(true))
                                 }
 
                                 it("should receive result") {
-                                    expect(result.0).to(equal(1))
-                                    expect(result.1).to(beTrue())
+                                    let value = result.value
+                                    expect(value?.0).to(equal(1))
+                                    expect(value?.1).to(beTrue())
+                                }
+
+                                context("when both are completed") {
+                                    beforeEach {
+                                        wrapper.value = nil
+                                        wrapper2.value = nil
+                                    }
+
+                                    it("should stopped and removed from memory") {
+                                        expect(wrapper.stopped).to(beTrue())
+                                        expect(wrapper2.stopped).to(beTrue())
+
+                                        expect(wrapper.weakValue).to(beNil())
+                                        expect(wrapper2.weakValue).to(beNil())
+                                    }
                                 }
                             }
+
+                            itBehavesLikeSecondWithError(false)
                         }
 
                         context("when resolved the second") {
                             beforeEach {
-                                wrapper2.action?(true)
+                                wrapper2.action?(.success(true))
                             }
 
                             it("should not receive result") {
@@ -671,18 +938,259 @@ class CallbackSpec: QuickSpec {
 
                             context("when resolved the first") {
                                 beforeEach {
-                                    wrapper.action?(2)
+                                    wrapper.action?(.success(1))
                                 }
 
                                 it("should receive result") {
-                                    expect(result.0).to(equal(2))
-                                    expect(result.1).to(beTrue())
+                                    let value = result.value
+                                    expect(value?.0).to(equal(1))
+                                    expect(value?.1).to(beTrue())
                                 }
+
+                                context("when both are completed") {
+                                    beforeEach {
+                                        wrapper.value = nil
+                                        wrapper2.value = nil
+                                    }
+
+                                    it("should stopped and removed from memory") {
+                                        expect(wrapper.stopped).to(beTrue())
+                                        expect(wrapper2.stopped).to(beTrue())
+
+                                        expect(wrapper.weakValue).to(beNil())
+                                        expect(wrapper2.weakValue).to(beNil())
+                                    }
+                                }
+
+                                itBehavesLikeFirstWithError(false)
                             }
+                        }
+
+                        itBehavesLikeFirstWithError(true)
+                        itBehavesLikeSecondWithError(true)
+                    }
+                }
+
+                describe("mapError") {
+                    var result: Result<Int, TestError2>!
+                    var originalResult: Result<Int, TestError>!
+                    var mapped: ResultCallback<Int, TestError2>!
+
+                    beforeEach {
+                        subject.onComplete({ originalResult = $0 })
+                        mapped = subject.mapError({ _ in return TestError2.anyError })
+                        mapped.onComplete({ result = $0 })
+                    }
+
+                    it("should be other instance") {
+                        expect(mapped).toNot(be(subject))
+                    }
+
+                    context("when original value is 0") {
+                        beforeEach {
+                            subject.complete(0)
+                        }
+
+                        it("should be receive mapped result") {
+                            expect(result.value).to(equal(0))
+                        }
+
+                        it("should be receive original result") {
+                            expect(originalResult.value).to(equal(0))
+                        }
+                    }
+
+                    context("when original value is less then 0") {
+                        beforeEach {
+                            subject.complete(-1)
+                        }
+
+                        it("should be receive mapped result") {
+                            expect(result.value).to(equal(-1))
+                        }
+
+                        it("should be receive original result") {
+                            expect(originalResult.value).to(equal(-1))
+                        }
+                    }
+
+                    context("when original value is greater then 0") {
+                        beforeEach {
+                            subject.complete(1)
+                        }
+
+                        it("should be receive mapped result") {
+                            expect(result.value).to(equal(1))
+                        }
+
+                        it("should be receive original result") {
+                            expect(originalResult.value).to(equal(1))
+                        }
+                    }
+
+                    context("when received error") {
+                        beforeEach {
+                            subject.complete(.anyError1)
+                        }
+
+                        it("should receive the same error as result") {
+                            expect(result.error).to(equal(.anyError))
+                        }
+
+                        it("should receive the same error as original result") {
+                            expect(result.error).to(equal(.anyError))
+                        }
+                    }
+                }
+
+                describe("map") {
+                    var result: Result<Bool, TestError>!
+                    var originalResult: Result<Int, TestError>!
+                    var mapped: ResultCallback<Bool, TestError>!
+
+                    beforeEach {
+                        subject.onComplete({ originalResult = $0 })
+                        mapped = subject.map({ $0 > 0 })
+                        mapped.onComplete({ result = $0 })
+                    }
+
+                    it("should be other instance") {
+                        expect(mapped).toNot(be(subject))
+                    }
+
+                    context("when original value is 0") {
+                        beforeEach {
+                            subject.complete(0)
+                        }
+
+                        it("should be receive mapped result") {
+                            expect(result.value).to(beFalse())
+                        }
+
+                        it("should be receive original result") {
+                            expect(originalResult.value).to(equal(0))
+                        }
+                    }
+
+                    context("when original value is less then 0") {
+                        beforeEach {
+                            subject.complete(-1)
+                        }
+
+                        it("should be receive mapped result") {
+                            expect(result.value).to(beFalse())
+                        }
+
+                        it("should be receive original result") {
+                            expect(originalResult.value).to(equal(-1))
+                        }
+                    }
+
+                    context("when original value is greater then 0") {
+                        beforeEach {
+                            subject.complete(1)
+                        }
+
+                        it("should be receive mapped result") {
+                            expect(result.value).to(beTrue())
+                        }
+
+                        it("should be receive original result") {
+                            expect(originalResult.value).to(equal(1))
+                        }
+                    }
+
+                    context("when received error") {
+                        beforeEach {
+                            subject.complete(.anyError1)
+                        }
+
+                        it("should receive the same error as result") {
+                            expect(result.error).to(equal(.anyError1))
+                        }
+
+                        it("should receive the same error as original result") {
+                            expect(result.error).to(equal(.anyError1))
                         }
                     }
                 }
             }
+
+            describe("static succes with deffered result") {
+                var result: Result<Int, TestError>!
+
+                beforeEach {
+                    subject = .success(1)
+                }
+
+                describe("weakness") {
+                    beforeEach {
+                        subject.onComplete(options: .weakness, { result = $0 })
+                    }
+
+                    it("should receive result") {
+                        expect(result.value).to(equal(1))
+                    }
+
+                    context("when destructed") {
+                        beforeEach {
+                            wrapper.value = nil
+                        }
+
+                        it("should be removed from memory") {
+                            expect(wrapper.weakValue).to(beNil())
+                        }
+                    }
+                }
+            }
+
+            describe("static succes with deffered result") {
+                var result: Result<Int, TestError>!
+
+                beforeEach {
+                    subject = .failure(.anyError1)
+                }
+
+                describe("weakness") {
+                    beforeEach {
+                        subject.onComplete(options: .weakness, { result = $0 })
+                    }
+
+                    it("should receive result") {
+                        expect(result.error).to(equal(.anyError1))
+                    }
+
+                    context("when destructed") {
+                        beforeEach {
+                            wrapper.value = nil
+                        }
+
+                        it("should be removed from memory") {
+                            expect(wrapper.weakValue).to(beNil())
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private extension Result {
+    var error: Failure? {
+        switch self {
+        case .success:
+            return nil
+        case .failure(let e):
+            return e
+        }
+    }
+
+    var value: Success? {
+        switch self {
+        case .success(let v):
+            return v
+        case .failure:
+            return nil
         }
     }
 }

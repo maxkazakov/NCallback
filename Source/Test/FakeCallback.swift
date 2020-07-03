@@ -24,8 +24,6 @@ public class FakeCallback<ResultType>: Callback<ResultType>, Spryable {
         case deferred = "deferred(_:)"
         case beforeComplete = "beforeComplete(_:)"
 
-        case onSuccess = "onSuccess(options:_:)"
-
         case map = "map(_:)"
         case mapError = "mapError(_:)"
     }
@@ -72,11 +70,6 @@ public class FakeCallback<ResultType>: Callback<ResultType>, Spryable {
 
     public override func complete<Response, Error: Swift.Error>(_ error: Error) where ResultType == Result<Response, Error> {
         return spryify(arguments: error)
-    }
-
-    public override func onSuccess<Response, Error: Swift.Error>(options: CallbackOption = .default,
-                                                                 _ callback: @escaping (_ result: Response) -> Void) where ResultType == Result<Response, Error> {
-        return spryify(arguments: options, callback)
     }
 
     public override func map<NewResponse, Response, Error: Swift.Error>(_ mapper: @escaping (Response) -> NewResponse) -> ResultCallback<NewResponse, Error>

@@ -133,18 +133,6 @@ public class Callback<ResultType> {
         complete(.failure(error))
     }
 
-    public func onSuccess<Response, Error: Swift.Error>(options: CallbackOption = .default,
-                                                        _ callback: @escaping (_ result: Response) -> Void) where ResultType == Result<Response, Error> {
-        onComplete(options: options) {
-            switch $0 {
-            case .success(let value):
-                callback(value)
-            case .failure:
-                break
-            }
-        }
-    }
-
     public func map<NewResponse, Response, Error: Swift.Error>(_ mapper: @escaping (Response) -> NewResponse) -> ResultCallback<NewResponse, Error>
         where ResultType == Result<Response, Error> {
             return flatMap { return $0.map(mapper) }
@@ -157,16 +145,12 @@ public class Callback<ResultType> {
 
     public class func success<Response, Error>(_ result: @escaping @autoclosure () -> Response) -> ResultCallback<Response, Error>
         where ResultType == Result<Response, Error> {
-            return Callback {
-                return .success(result())
-            }
+            return Callback { return .success(result()) }
     }
 
     public class func failure<Response, Error>(_ result: @escaping @autoclosure () -> Error) -> ResultCallback<Response, Error>
         where ResultType == Result<Response, Error> {
-            return Callback {
-                return .failure(result())
-            }
+            return Callback { return .failure(result()) }
     }
 }
 
@@ -193,7 +177,7 @@ extension Callback: Hashable {
 // MARK: - zip
 public func zip<ResponseA, ResponseB>(_ lhs: Callback<ResponseA>,
                                       _ rhs: Callback<ResponseB>) -> Callback<(ResponseA, ResponseB)> {
-    let startTask: Callback<(ResponseA, ResponseB)>.ServiceClosure = { original in
+    let startTask: Callback<(ResponseA, ResponseB)>.ServiceClosure = { [weak lhs, weak rhs] original in
         var a: ResponseA?
         var b: ResponseB?
 
@@ -204,35 +188,77 @@ public func zip<ResponseA, ResponseB>(_ lhs: Callback<ResponseA>,
             }
         }
 
-        lhs.onComplete { result in
+        lhs?.onComplete(options: .selfRetained) { result in
             a = result
             check()
         }
 
-        rhs.onComplete { result in
+        rhs?.onComplete(options: .selfRetained) { result in
             b = result
             check()
         }
     }
 
-    let stopTask: Callback<(ResponseA, ResponseB)>.ServiceClosure = { _ in
-        lhs.cancel()
-        rhs.cancel()
+    let stopTask: Callback<(ResponseA, ResponseB)>.ServiceClosure = { [weak lhs, weak rhs] _ in
+        lhs?.cancel()
+        rhs?.cancel()
     }
 
-    return Callback<(ResponseA, ResponseB)>(start: startTask,
-                                            stop: stopTask)
+    return .init(start: startTask,
+                 stop: stopTask)
 }
 
 public func zip<ResponseA, ResponseB, Error: Swift.Error>(_ lhs: ResultCallback<ResponseA, Error>,
                                                           _ rhs: ResultCallback<ResponseB, Error>) -> ResultCallback<(ResponseA, ResponseB), Error>  {
-    zip(lhs, rhs).flatMap {
-        switch ($0, $1) {
-        case (.success(let a), .success(let b)):
-            return .success((a, b))
-        case (.failure(let error), _),
-             (_, .failure(let error)):
-            return .failure(error)
+    let startTask: ResultCallback<(ResponseA, ResponseB), Error>.ServiceClosure = { [weak lhs, weak rhs] original in
+        var a: Result<ResponseA, Error>?
+        var b: Result<ResponseB, Error>?
+
+        let check = { [weak lhs, weak rhs] in
+            if let a = a, let b = b {
+                switch (a, b) {
+                case (.success(let a), .success(let b)):
+                    let result: (ResponseA, ResponseB) = (a, b)
+                    original.complete(result)
+                case (.failure(let a), _),
+                     (_, .failure(let a)):
+                    original.complete(a)
+                }
+            } else if let a = a {
+                switch a {
+                case .success:
+                    break
+                case .failure(let e):
+                    original.complete(e)
+                    rhs?.cancel()
+                }
+            } else if let b = b {
+                switch b {
+                case .success:
+                    break
+                case .failure(let e):
+                    original.complete(e)
+                    lhs?.cancel()
+                }
+            }
+        }
+
+        lhs?.onComplete(options: .selfRetained) { result in
+            a = result
+            check()
+        }
+
+        rhs?.onComplete(options: .selfRetained) { result in
+            b = result
+            check()
         }
     }
+
+    let stopTask: ResultCallback<(ResponseA, ResponseB), Error>.ServiceClosure = { [weak lhs, weak rhs] _ in
+        lhs?.cancel()
+        rhs?.cancel()
+    }
+
+    return .init(start: startTask,
+                 stop: stopTask)
 }
