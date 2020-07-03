@@ -192,17 +192,16 @@ extension Callback: Hashable {
 
 // MARK: - zip
 public func zip<ResponseA, ResponseB>(_ lhs: Callback<ResponseA>,
-                                      _ rhs: Callback<ResponseB>,
-                                      _ completion: @escaping (ResponseA, ResponseB) -> Void) {
-    let task = {
+                                      _ rhs: Callback<ResponseB>) -> Callback<(ResponseA, ResponseB)> {
+    let startTask: Callback<(ResponseA, ResponseB)>.ServiceClosure = { original in
         var a: ResponseA?
         var b: ResponseB?
 
         let check = {
-            guard let a = a, let b = b else {
-                return
+            if let a = a, let b = b {
+                let result = (a, b)
+                original.complete(result)
             }
-            completion(a, b)
         }
 
         lhs.onComplete { result in
@@ -216,20 +215,24 @@ public func zip<ResponseA, ResponseB>(_ lhs: Callback<ResponseA>,
         }
     }
 
-    task()
+    let stopTask: Callback<(ResponseA, ResponseB)>.ServiceClosure = { _ in
+        lhs.cancel()
+        rhs.cancel()
+    }
+
+    return Callback<(ResponseA, ResponseB)>(start: startTask,
+                                            stop: stopTask)
 }
 
 public func zip<ResponseA, ResponseB, Error: Swift.Error>(_ lhs: ResultCallback<ResponseA, Error>,
-                                                          _ rhs: ResultCallback<ResponseB, Error>,
-                                                          _ completion: @escaping (Result<(ResponseA, ResponseB), Error>) -> Void) {
-    zip(lhs, rhs) {
+                                                          _ rhs: ResultCallback<ResponseB, Error>) -> ResultCallback<(ResponseA, ResponseB), Error>  {
+    zip(lhs, rhs).flatMap {
         switch ($0, $1) {
         case (.success(let a), .success(let b)):
-            completion(.success((a, b)))
-        case (.failure(let error), _):
-            completion(.failure(error))
-        case (_, .failure(let error)):
-            completion(.failure(error))
+            return .success((a, b))
+        case (.failure(let error), _),
+             (_, .failure(let error)):
+            return .failure(error)
         }
     }
 }
