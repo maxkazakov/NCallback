@@ -40,8 +40,9 @@ public class PendingCallback<ResultType> {
                 result.complete($0)
             }
         } else {
-            result = generator(closure)
-            cached = result.deferred { [weak self] _ in
+            let generated = generator(closure)
+            cached = generated
+            result = generated.deferred { [weak self] _ in
                 self?.cached = nil
             }
         }
@@ -52,9 +53,11 @@ public class PendingCallback<ResultType> {
     public func complete(_ result: ResultType) {
         assert(cached != nil, "no one will receive this event while no subscribers")
         cached?.complete(result)
+        cached = nil
     }
 
     public func cancel() {
+        assert(cached != nil, "no one will receive this event while no subscribers")
         cached?.cancel()
         cached = nil
     }
