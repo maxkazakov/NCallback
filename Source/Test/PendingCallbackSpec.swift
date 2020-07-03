@@ -5,12 +5,13 @@ import Quick
 import Nimble
 import Spry
 
+@testable import NCallback
+@testable import NCallbackTestHelpers
+
 class PendingCallbackSpec: QuickSpec {
     override func spec() {
         describe("PendingCallback") {
-            it("should be a real test") {
-                expect(true).to(beTrue())
-            }
+//            let subject: PendingCallback<Int>!
         }
     }
 }
