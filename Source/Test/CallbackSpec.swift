@@ -930,7 +930,7 @@ class CallbackSpec: QuickSpec {
                         }
                     }
 
-                    context("when received error") {
+                    context("when received error .anyError1") {
                         beforeEach {
                             subject.complete(.anyError1)
                         }
@@ -940,7 +940,21 @@ class CallbackSpec: QuickSpec {
                         }
 
                         it("should receive the same error as original result") {
+                            expect(originalResult.error).to(equal(.anyError1))
+                        }
+                    }
+
+                    context("when received error .anyError2") {
+                        beforeEach {
+                            subject.complete(.anyError2)
+                        }
+
+                        it("should receive the same error as result") {
                             expect(result.error).to(equal(.anyError))
+                        }
+
+                        it("should receive the same error as original result") {
+                            expect(originalResult.error).to(equal(.anyError2))
                         }
                     }
                 }
@@ -1002,7 +1016,7 @@ class CallbackSpec: QuickSpec {
                         }
                     }
 
-                    context("when received error") {
+                    context("when received error .anyError1") {
                         beforeEach {
                             subject.complete(.anyError1)
                         }
@@ -1012,7 +1026,281 @@ class CallbackSpec: QuickSpec {
                         }
 
                         it("should receive the same error as original result") {
-                            expect(result.error).to(equal(.anyError1))
+                            expect(originalResult.error).to(equal(.anyError1))
+                        }
+                    }
+
+                    context("when received error .anyError2") {
+                        beforeEach {
+                            subject.complete(.anyError2)
+                        }
+
+                        it("should receive the same error as result") {
+                            expect(result.error).to(equal(.anyError2))
+                        }
+
+                        it("should receive the same error as original result") {
+                            expect(originalResult.error).to(equal(.anyError2))
+                        }
+                    }
+                }
+
+                describe("recover with error mapping") {
+                    var result: Int!
+                    var originalResult: Result<Int, TestError>!
+                    var mapped: Callback<Int>!
+
+                    beforeEach {
+                        subject.onComplete({ originalResult = $0 })
+                        mapped = subject.recover({ $0 == .anyError1 ? 1 : 2 })
+                        mapped.onComplete({ result = $0 })
+                    }
+
+                    it("should be other instance") {
+                        expect(mapped).toNot(be(subject))
+                    }
+
+                    context("when original value is 0") {
+                        beforeEach {
+                            subject.complete(0)
+                        }
+
+                        it("should be receive mapped result") {
+                            expect(result).to(equal(0))
+                        }
+
+                        it("should be receive original result") {
+                            expect(originalResult.value).to(equal(0))
+                        }
+                    }
+
+                    context("when original value is less then 0") {
+                        beforeEach {
+                            subject.complete(-1)
+                        }
+
+                        it("should be receive mapped result") {
+                            expect(result).to(equal(-1))
+                        }
+
+                        it("should be receive original result") {
+                            expect(originalResult.value).to(equal(-1))
+                        }
+                    }
+
+                    context("when original value is greater then 0") {
+                        beforeEach {
+                            subject.complete(1)
+                        }
+
+                        it("should be receive mapped result") {
+                            expect(result).to(equal(1))
+                        }
+
+                        it("should be receive original result") {
+                            expect(originalResult.value).to(equal(1))
+                        }
+                    }
+
+                    context("when received error .anyError1") {
+                        beforeEach {
+                            subject.complete(.anyError1)
+                        }
+
+                        it("should receive the same error as result") {
+                            expect(result).to(equal(1))
+                        }
+
+                        it("should receive the same error as original result") {
+                            expect(originalResult.error).to(equal(.anyError1))
+                        }
+                    }
+
+                    context("when received error .anyError2") {
+                        beforeEach {
+                            subject.complete(.anyError2)
+                        }
+
+                        it("should receive the same error as result") {
+                            expect(result).to(equal(2))
+                        }
+
+                        it("should receive the same error as original result") {
+                            expect(originalResult.error).to(equal(.anyError2))
+                        }
+                    }
+                }
+
+                describe("recover with static value") {
+                    var result: Int!
+                    var originalResult: Result<Int, TestError>!
+                    var mapped: Callback<Int>!
+
+                    beforeEach {
+                        subject.onComplete({ originalResult = $0 })
+                        mapped = subject.recover(1)
+                        mapped.onComplete({ result = $0 })
+                    }
+
+                    it("should be other instance") {
+                        expect(mapped).toNot(be(subject))
+                    }
+
+                    context("when original value is 0") {
+                        beforeEach {
+                            subject.complete(0)
+                        }
+
+                        it("should be receive mapped result") {
+                            expect(result).to(equal(0))
+                        }
+
+                        it("should be receive original result") {
+                            expect(originalResult.value).to(equal(0))
+                        }
+                    }
+
+                    context("when original value is less then 0") {
+                        beforeEach {
+                            subject.complete(-1)
+                        }
+
+                        it("should be receive mapped result") {
+                            expect(result).to(equal(-1))
+                        }
+
+                        it("should be receive original result") {
+                            expect(originalResult.value).to(equal(-1))
+                        }
+                    }
+
+                    context("when original value is greater then 0") {
+                        beforeEach {
+                            subject.complete(1)
+                        }
+
+                        it("should be receive mapped result") {
+                            expect(result).to(equal(1))
+                        }
+
+                        it("should be receive original result") {
+                            expect(originalResult.value).to(equal(1))
+                        }
+                    }
+
+                    context("when received error .anyError1") {
+                        beforeEach {
+                            subject.complete(.anyError1)
+                        }
+
+                        it("should receive the same error as result") {
+                            expect(result).to(equal(1))
+                        }
+
+                        it("should receive the same error as original result") {
+                            expect(originalResult.error).to(equal(.anyError1))
+                        }
+                    }
+
+                    context("when received error .anyError2") {
+                        beforeEach {
+                            subject.complete(.anyError2)
+                        }
+
+                        it("should receive the same error as result") {
+                            expect(result).to(equal(1))
+                        }
+
+                        it("should receive the same error as original result") {
+                            expect(originalResult.error).to(equal(.anyError2))
+                        }
+                    }
+                }
+
+                describe("recover with dynamic value") {
+                    var value: Int!
+                    var result: Int!
+                    var originalResult: Result<Int, TestError>!
+                    var mapped: Callback<Int>!
+
+                    beforeEach {
+                        value = (0...10).randomElement() ?? 3
+                        subject.onComplete({ originalResult = $0 })
+                        mapped = subject.recover({ value })
+                        mapped.onComplete({ result = $0 })
+                    }
+
+                    it("should be other instance") {
+                        expect(mapped).toNot(be(subject))
+                    }
+
+                    context("when original value is 0") {
+                        beforeEach {
+                            subject.complete(0)
+                        }
+
+                        it("should be receive mapped result") {
+                            expect(result).to(equal(0))
+                        }
+
+                        it("should be receive original result") {
+                            expect(originalResult.value).to(equal(0))
+                        }
+                    }
+
+                    context("when original value is less then 0") {
+                        beforeEach {
+                            subject.complete(-1)
+                        }
+
+                        it("should be receive mapped result") {
+                            expect(result).to(equal(-1))
+                        }
+
+                        it("should be receive original result") {
+                            expect(originalResult.value).to(equal(-1))
+                        }
+                    }
+
+                    context("when original value is greater then 0") {
+                        beforeEach {
+                            subject.complete(1)
+                        }
+
+                        it("should be receive mapped result") {
+                            expect(result).to(equal(1))
+                        }
+
+                        it("should be receive original result") {
+                            expect(originalResult.value).to(equal(1))
+                        }
+                    }
+
+                    context("when received error .anyError1") {
+                        beforeEach {
+                            subject.complete(.anyError1)
+                        }
+
+                        it("should receive the same error as result") {
+                            expect(result).to(equal(value))
+                        }
+
+                        it("should receive the same error as original result") {
+                            expect(originalResult.error).to(equal(.anyError1))
+                        }
+                    }
+
+                    context("when received error .anyError2") {
+                        beforeEach {
+                            subject.complete(.anyError2)
+                        }
+
+                        it("should receive the same error as result") {
+                            expect(result).to(equal(value))
+                        }
+
+                        it("should receive the same error as original result") {
+                            expect(originalResult.error).to(equal(.anyError2))
                         }
                     }
                 }

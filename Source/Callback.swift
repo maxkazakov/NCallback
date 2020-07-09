@@ -143,6 +143,42 @@ public class Callback<ResultType> {
             return flatMap { return $0.mapError(mapper) }
     }
 
+    public func recover<Response, Error: Swift.Error>(_ mapper: @escaping (Error) -> Response) -> Callback<Response>
+        where ResultType == Result<Response, Error> {
+            return flatMap {
+                switch $0 {
+                case .success(let v):
+                    return v
+                case .failure(let e):
+                    return mapper(e)
+                }
+            }
+    }
+
+    public func recover<Response, Error: Swift.Error>(_ recovered: @escaping () -> Response) -> Callback<Response>
+        where ResultType == Result<Response, Error> {
+            return flatMap {
+                switch $0 {
+                case .success(let v):
+                    return v
+                case .failure:
+                    return recovered()
+                }
+            }
+    }
+
+    public func recover<Response, Error: Swift.Error>(_ recovered: @escaping @autoclosure () -> Response) -> Callback<Response>
+        where ResultType == Result<Response, Error> {
+            return flatMap {
+                switch $0 {
+                case .success(let v):
+                    return v
+                case .failure:
+                    return recovered()
+                }
+            }
+    }
+
     public class func success<Response, Error>(_ result: @escaping @autoclosure () -> Response) -> ResultCallback<Response, Error>
         where ResultType == Result<Response, Error> {
             return Callback { return .success(result()) }
