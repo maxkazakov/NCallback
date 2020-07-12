@@ -57,7 +57,6 @@ public class PendingCallback<ResultType> {
     }
 
     public func cancel() {
-        assert(cached != nil, "no one will receive this event while no subscribers")
         cached?.cancel()
         cached = nil
     }
