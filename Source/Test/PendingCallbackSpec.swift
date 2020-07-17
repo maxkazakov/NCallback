@@ -31,8 +31,12 @@ class PendingCallbackSpec: QuickSpec {
 
                 context("when no pending callbacks") {
                     context("when canceling") {
-                        it("should throw assertion") {
-                            expect { subject.cancel() }.to(throwAssertion())
+                        beforeEach {
+                            subject.cancel()
+                        }
+
+                        it("should nothing to do") {
+                            expect(true).to(beTrue())
                         }
                     }
 
