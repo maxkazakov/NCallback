@@ -283,20 +283,20 @@ public func zip<Response>(_ input: [Callback<Response>]) -> Callback<[Response]>
             let offset = info.offset
             info.element.onComplete(options: .selfRetained) { response in
                 result.insert(.value(response), at: offset)
-            }
 
-            let actual: [Response] = result.compactMap {
-                switch $0 {
-                case .pending:
-                    return nil
-                case .value(let r):
-                    return r
+                let actual: [Response] = result.compactMap {
+                    switch $0 {
+                    case .pending:
+                        return nil
+                    case .value(let r):
+                        return r
+                    }
                 }
-            }
 
-            if array.count == actual.count {
-                original.complete(actual)
-                array.removeAll()
+                if array.count == actual.count {
+                    original.complete(actual)
+                    array.removeAll()
+                }
             }
         }
     }
