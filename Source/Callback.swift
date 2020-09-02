@@ -179,6 +179,32 @@ public class Callback<ResultType> {
             }
     }
 
+    public func recoverNil<Response, Error: Swift.Error>() -> Callback<Response?>
+        where ResultType == Result<Response, Error> {
+            return flatMap {
+                switch $0 {
+                case .success(let v):
+                    return v
+                case .failure:
+                    return nil
+                }
+            }
+    }
+
+    public func filterNils<Response>() -> Callback<[Response]>
+        where ResultType == [Response?] {
+            return flatMap { result in
+                result.compactMap({ $0 })
+            }
+    }
+
+    public func filterNils<Response, Error: Swift.Error>() -> ResultCallback<[Response], Error>
+        where ResultType == Result<[Response?], Error> {
+            return map { result in
+                result.compactMap({ $0 })
+            }
+    }
+
     public class func success<Response, Error>(_ result: @escaping @autoclosure () -> Response) -> ResultCallback<Response, Error>
         where ResultType == Result<Response, Error> {
             return Callback { return .success(result()) }
