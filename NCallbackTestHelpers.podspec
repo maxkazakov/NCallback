@@ -28,6 +28,10 @@ Pod::Spec.new do |spec|
 
     spec.frameworks = 'XCTest', 'Foundation'
 
+    spec.scheme = {
+      :code_coverage => true
+    }
+
     spec.test_spec 'Tests' do |tests|
         #        tests.requires_app_host = true
         tests.source_files = 'Source/**/*Spec.swift'

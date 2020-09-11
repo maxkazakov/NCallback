@@ -52,91 +52,58 @@ private final class SubjectWrapper<Value> {
 class CallbackSpec: QuickSpec {
     override func spec() {
         describe("Callback") {
-            var wrapper: SubjectWrapper<Int>!
-            var subject: Callback<Int>! {
-                get {
-                    wrapper.value
-                }
-                set {
-                    wrapper.set(newValue)
-                }
-            }
-
-            beforeEach {
-                wrapper = .init()
-            }
-
-            let lifecycle: (_ action: @escaping (CallbackOption, _ callback: @escaping Callback<Int>.Completion) -> Void) -> Void = { action in
-                describe("lifecycle") {
-                    var result: Int!
-
-                    beforeEach {
-                        wrapper.stopped = false
-                        result = nil
+            describe("Simple Callback") {
+                var wrapper: SubjectWrapper<Int>!
+                var subject: Callback<Int>! {
+                    get {
+                        wrapper.value
                     }
-
-                    describe("weakness") {
-                        beforeEach {
-                            action(.weakness, { result = $0 })
-                        }
-
-                        context("when destructed before completion") {
-                            beforeEach {
-                                subject = nil
-                                wrapper.action?(1)
-                            }
-
-                            it("should not receive result") {
-                                expect(result).to(beNil())
-                            }
-
-                            it("should call stop on deinit") {
-                                expect(wrapper.stopped).to(beTrue())
-                            }
-                        }
-
-                        context("when complete correctly and destructed") {
-                            beforeEach {
-                                wrapper.action?(1)
-                                wrapper.value = nil
-                            }
-
-                            it("should receive result") {
-                                expect(result).to(equal(1))
-                            }
-
-                            it("should call stop on deinit") {
-                                expect(wrapper.stopped).to(beTrue())
-                            }
-                        }
+                    set {
+                        wrapper.set(newValue)
                     }
+                }
 
-                    describe("selfRetained") {
+                beforeEach {
+                    wrapper = .init()
+                }
+
+                let lifecycle: (_ action: @escaping (CallbackOption, _ callback: @escaping Callback<Int>.Completion) -> Void) -> Void = { action in
+                    describe("lifecycle") {
+                        var result: Int!
+
                         beforeEach {
-                            action(.selfRetained, { result = $0 })
-                            subject = nil
+                            wrapper.stopped = false
+                            result = nil
                         }
 
-                        context("when cant be destructed before completion") {
+                        describe("weakness") {
                             beforeEach {
-                                wrapper.stopped = false
+                                action(.weakness, { result = $0 })
                             }
 
-                            it("should not receive result") {
-                                expect(result).to(beNil())
-                            }
+                            context("when destructed before completion") {
+                                beforeEach {
+                                    subject = nil
+                                    wrapper.action?(1)
+                                }
 
-                            it("should not call stop") {
-                                expect(wrapper.stopped).to(beFalse())
+                                it("should not receive result") {
+                                    expect(result).to(beNil())
+                                }
+
+                                it("should call stop on deinit") {
+                                    expect(wrapper.stopped).to(beTrue())
+                                }
                             }
 
                             context("when complete correctly and destructed") {
                                 beforeEach {
-                                    wrapper.action?(2)
+                                    wrapper.action?(1)
+                                    wrapper.value = nil
                                 }
 
                                 it("should receive result") {
-                                    expect(result).to(equal(2))
+                                    expect(result).to(equal(1))
                                 }
 
                                 it("should call stop on deinit") {
@@ -145,81 +112,32 @@ class CallbackSpec: QuickSpec {
                             }
                         }
 
-                        context("when complete correctly and destructed") {
+                        describe("selfRetained") {
                             beforeEach {
-                                wrapper.stopped = false
-                                wrapper.action?(1)
-                            }
-
-                            it("should receive result") {
-                                expect(result).to(equal(1))
-                            }
-
-                            it("should call stop on deinit") {
-                                expect(wrapper.stopped).to(beTrue())
-                            }
-                        }
-                    }
-
-                    describe("repeatable") {
-                        beforeEach {
-                            action(.repeatable, { result = $0 })
-                        }
-
-                        context("when destructed before completion") {
-                            beforeEach {
-                                wrapper.stopped = false
+                                action(.selfRetained, { result = $0 })
                                 subject = nil
-                                wrapper.action?(1)
                             }
 
-                            it("should not receive result") {
-                                expect(result).to(beNil())
-                            }
-
-                            it("should call stop on deinit") {
-                                expect(wrapper.stopped).to(beTrue())
-                            }
-                        }
-
-                        context("when complete correctly and destructed") {
-                            beforeEach {
-                                wrapper.stopped = false
-                                wrapper.action?(1)
-                            }
-
-                            it("should receive result") {
-                                expect(result).to(equal(1))
-                            }
-
-                            it("should not call stop") {
-                                expect(wrapper.stopped).to(beFalse())
-                            }
-
-                            context("when completed twice") {
+                            context("when cant be destructed before completion") {
                                 beforeEach {
                                     wrapper.stopped = false
-                                    wrapper.action?(2)
                                 }
 
-                                it("should receive result") {
-                                    expect(result).to(equal(2))
+                                it("should not receive result") {
+                                    expect(result).to(beNil())
                                 }
 
                                 it("should not call stop") {
                                     expect(wrapper.stopped).to(beFalse())
                                 }
 
-                                context("when destructed before") {
+                                context("when complete correctly and destructed") {
                                     beforeEach {
-                                        wrapper.stopped = false
-                                        result = nil
-                                        subject = nil
-                                        wrapper.action?(1)
+                                        wrapper.action?(2)
                                     }
 
-                                    it("should not receive result") {
-                                        expect(result).to(beNil())
+                                    it("should receive result") {
+                                        expect(result).to(equal(2))
                                     }
 
                                     it("should call stop on deinit") {
@@ -227,208 +145,292 @@ class CallbackSpec: QuickSpec {
                                     }
                                 }
                             }
+
+                            context("when complete correctly and destructed") {
+                                beforeEach {
+                                    wrapper.stopped = false
+                                    wrapper.action?(1)
+                                }
+
+                                it("should receive result") {
+                                    expect(result).to(equal(1))
+                                }
+
+                                it("should call stop on deinit") {
+                                    expect(wrapper.stopped).to(beTrue())
+                                }
+                            }
+                        }
+
+                        describe("repeatable") {
+                            beforeEach {
+                                action(.repeatable, { result = $0 })
+                            }
+
+                            context("when destructed before completion") {
+                                beforeEach {
+                                    wrapper.stopped = false
+                                    subject = nil
+                                    wrapper.action?(1)
+                                }
+
+                                it("should not receive result") {
+                                    expect(result).to(beNil())
+                                }
+
+                                it("should call stop on deinit") {
+                                    expect(wrapper.stopped).to(beTrue())
+                                }
+                            }
+
+                            context("when complete correctly and destructed") {
+                                beforeEach {
+                                    wrapper.stopped = false
+                                    wrapper.action?(1)
+                                }
+
+                                it("should receive result") {
+                                    expect(result).to(equal(1))
+                                }
+
+                                it("should not call stop") {
+                                    expect(wrapper.stopped).to(beFalse())
+                                }
+
+                                context("when completed twice") {
+                                    beforeEach {
+                                        wrapper.stopped = false
+                                        wrapper.action?(2)
+                                    }
+
+                                    it("should receive result") {
+                                        expect(result).to(equal(2))
+                                    }
+
+                                    it("should not call stop") {
+                                        expect(wrapper.stopped).to(beFalse())
+                                    }
+
+                                    context("when destructed before") {
+                                        beforeEach {
+                                            wrapper.stopped = false
+                                            result = nil
+                                            subject = nil
+                                            wrapper.action?(1)
+                                        }
+
+                                        it("should not receive result") {
+                                            expect(result).to(beNil())
+                                        }
+
+                                        it("should call stop on deinit") {
+                                            expect(wrapper.stopped).to(beTrue())
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-            }
 
-            let commonEvents = {
-                describe("beforeComplete and deferred") {
-                    enum Events: Hashable {
-                        case beforeComplete
-                        case onComplete
-                        case deferred
-                    }
-                    var events: [Events]!
+                let commonEvents = {
+                    describe("beforeComplete and deferred") {
+                        enum Events: Hashable {
+                            case beforeComplete
+                            case onComplete
+                            case deferred
+                        }
+                        var events: [Events]!
 
-                    beforeEach {
-                        events = []
-
-                        subject.beforeComplete({ _ in events.append(.beforeComplete) })
-                        subject.deferred({ _ in events.append(.deferred) })
-                        subject.onComplete({ _ in events.append(.onComplete) })
-
-                        wrapper.action?(1)
-                    }
-
-                    it("should resolve events in correct order") {
-                        let expected: [Events] = [.beforeComplete, .onComplete, .deferred]
-                        expect(events).to(equal(expected))
-                    }
-                }
-
-                describe("flatMap") {
-                    var result: Bool!
-                    var originalResult: Int!
-                    var mapped: Callback<Bool>!
-
-                    context("when original value is greater then 0") {
                         beforeEach {
-                            subject.onComplete({ originalResult = $0 })
-                            mapped = subject.flatMap({ $0 > 0 })
-                            mapped.onComplete({ result = $0 })
+                            events = []
+
+                            subject.beforeComplete({ _ in events.append(.beforeComplete) })
+                            subject.deferred({ _ in events.append(.deferred) })
+                            subject.onComplete({ _ in events.append(.onComplete) })
 
                             wrapper.action?(1)
                         }
 
-                        it("should be other instance") {
-                            expect(mapped).toNot(be(subject))
-                        }
-
-                        it("should be receive original result") {
-                            expect(originalResult).to(equal(1))
-                        }
-
-                        it("should be receive mapped result") {
-                            expect(result).to(beTrue())
+                        it("should resolve events in correct order") {
+                            let expected: [Events] = [.beforeComplete, .onComplete, .deferred]
+                            expect(events).to(equal(expected))
                         }
                     }
 
-                    context("when original value is greater then 0") {
+                    describe("flatMap") {
+                        var result: Bool!
+                        var originalResult: Int!
+                        var mapped: Callback<Bool>!
+
+                        context("when original value is greater then 0") {
+                            beforeEach {
+                                subject.onComplete({ originalResult = $0 })
+                                mapped = subject.flatMap({ $0 > 0 })
+                                mapped.onComplete({ result = $0 })
+
+                                wrapper.action?(1)
+                            }
+
+                            it("should be other instance") {
+                                expect(mapped).toNot(be(subject))
+                            }
+
+                            it("should be receive original result") {
+                                expect(originalResult).to(equal(1))
+                            }
+
+                            it("should be receive mapped result") {
+                                expect(result).to(beTrue())
+                            }
+                        }
+
+                        context("when original value is greater then 0") {
+                            beforeEach {
+                                subject.onComplete({ originalResult = $0 })
+                                mapped = subject.flatMap({ $0 < 0 })
+                                mapped.onComplete({ result = $0 })
+
+                                wrapper.action?(1)
+                            }
+
+                            it("should be other instance") {
+                                expect(mapped).toNot(be(subject))
+                            }
+
+                            it("should be receive original result") {
+                                expect(originalResult).to(equal(1))
+                            }
+
+                            it("should be receive mapped result") {
+                                expect(result).to(beFalse())
+                            }
+                        }
+                    }
+                }
+
+                describe("empty init") {
+                    beforeEach {
+                        subject = .init()
+                        wrapper.action = { [weak wrapper] v in
+                            wrapper?.value?.complete(v)
+                        }
+                    }
+
+                    context("when configured twice") {
                         beforeEach {
-                            subject.onComplete({ originalResult = $0 })
-                            mapped = subject.flatMap({ $0 < 0 })
-                            mapped.onComplete({ result = $0 })
-
-                            wrapper.action?(1)
+                            subject.onComplete({ _ in })
                         }
 
-                        it("should be other instance") {
-                            expect(mapped).toNot(be(subject))
-                        }
-
-                        it("should be receive original result") {
-                            expect(originalResult).to(equal(1))
-                        }
-
-                        it("should be receive mapped result") {
-                            expect(result).to(beFalse())
+                        it("should throw assert") {
+                            expect { subject.onComplete({ _ in }) }.to(throwAssertion())
                         }
                     }
-                }
-            }
 
-            describe("empty init") {
-                beforeEach {
-                    subject = .init()
-                    wrapper.action = { [weak wrapper] v in
-                        wrapper?.value?.complete(v)
-                    }
+                    commonEvents()
                 }
 
-                context("when configured twice") {
+                describe("init with deferred autoclosure result") {
                     beforeEach {
-                        subject.onComplete({ _ in })
+                        subject = .init(result: 1)
                     }
 
-                    it("should throw assert") {
-                        expect { subject.onComplete({ _ in }) }.to(throwAssertion())
-                    }
-                }
-
-                commonEvents()
-            }
-
-            describe("init with deferred autoclosure result") {
-                beforeEach {
-                    subject = .init(result: 1)
-                }
-
-                context("when configured twice") {
-                    beforeEach {
-                        subject.onComplete({ _ in })
-                    }
-
-                    it("should throw assert") {
-                        expect { subject.onComplete({ _ in }) }.to(throwAssertion())
-                    }
-                }
-
-                commonEvents()
-            }
-
-            describe("init with deferred result") {
-                beforeEach {
-                    subject = .init(result: { return 1 })
-                }
-
-                context("when configured twice") {
-                    beforeEach {
-                        subject.onComplete({ _ in })
-                    }
-
-                    it("should throw assert") {
-                        expect { subject.onComplete({ _ in }) }.to(throwAssertion())
-                    }
-                }
-
-                commonEvents()
-            }
-
-            describe("init with deferred result and cancel action") {
-                beforeEach {
-                    subject = .init(start: wrapper.start,
-                                    stop: wrapper.stop)
-                }
-
-                afterEach {
-                    wrapper.stopped = false
-                }
-
-                commonEvents()
-
-                lifecycle({ option, callback in
-                    subject.onComplete(options: option, callback)
-                })
-
-                lifecycle({ option, callback in
-                    subject.beforeComplete(callback)
-                    subject.oneWay(options: option)
-                })
-
-                context("when configured for the second time") {
-                    beforeEach {
-                        subject.onComplete({ _ in })
-                    }
-
-                    it("should throw assert") {
-                        expect { subject.onComplete({ _ in }) }.to(throwAssertion())
-                    }
-
-                    context("when canceled") {
+                    context("when configured twice") {
                         beforeEach {
-                            subject.cancel()
+                            subject.onComplete({ _ in })
+                        }
+
+                        it("should throw assert") {
+                            expect { subject.onComplete({ _ in }) }.to(throwAssertion())
+                        }
+                    }
+
+                    commonEvents()
+                }
+
+                describe("init with deferred result") {
+                    beforeEach {
+                        subject = .init(result: { return 1 })
+                    }
+
+                    context("when configured twice") {
+                        beforeEach {
+                            subject.onComplete({ _ in })
+                        }
+
+                        it("should throw assert") {
+                            expect { subject.onComplete({ _ in }) }.to(throwAssertion())
+                        }
+                    }
+
+                    commonEvents()
+                }
+
+                describe("init with deferred result and cancel action") {
+                    beforeEach {
+                        subject = .init(start: wrapper.start,
+                                        stop: wrapper.stop)
+                    }
+
+                    afterEach {
+                        wrapper.stopped = false
+                    }
+
+                    commonEvents()
+
+                    lifecycle({ option, callback in
+                        subject.onComplete(options: option, callback)
+                    })
+
+                    lifecycle({ option, callback in
+                        subject.beforeComplete(callback)
+                        subject.oneWay(options: option)
+                    })
+
+                    context("when configured for the second time") {
+                        beforeEach {
+                            subject.onComplete({ _ in })
+                        }
+
+                        it("should throw assert") {
+                            expect { subject.onComplete({ _ in }) }.to(throwAssertion())
+                        }
+
+                        context("when canceled") {
+                            beforeEach {
+                                subject.cancel()
+                            }
+
+                            it("should call stop on deinit") {
+                                expect(wrapper.stopped).to(beTrue())
+                            }
+                        }
+
+                        context("when self retained; when configuring for the third time") {
+                            weak var saved: Callback<Int>?
+
+                            beforeEach {
+                                subject.cancel()
+                                subject.onComplete(options: .selfRetained, { _ in  })
+
+                                saved = subject
+                                subject = nil
+                            }
+
+                            it("should contains reference") {
+                                expect(saved).toNot(beNil())
+                            }
+                        }
+                    }
+
+                    describe("deinit") {
+                        beforeEach {
+                            subject = nil
                         }
 
                         it("should call stop on deinit") {
                             expect(wrapper.stopped).to(beTrue())
                         }
-                    }
-
-                    context("when self retained; when configuring for the third time") {
-                        weak var saved: Callback<Int>?
-
-                        beforeEach {
-                            subject.cancel()
-                            subject.onComplete(options: .selfRetained, { _ in  })
-
-                            saved = subject
-                            subject = nil
-                        }
-
-                        it("should contains reference") {
-                            expect(saved).toNot(beNil())
-                        }
-                    }
-                }
-
-                describe("deinit") {
-                    beforeEach {
-                        subject = nil
-                    }
-
-                    it("should call stop on deinit") {
-                        expect(wrapper.stopped).to(beTrue())
                     }
                 }
 
@@ -436,6 +438,8 @@ class CallbackSpec: QuickSpec {
                     var subject2: Callback<Int>!
 
                     beforeEach {
+                        subject = .init(start: wrapper.start,
+                                        stop: wrapper.stop)
                         subject2 = .init()
                     }
 
@@ -515,6 +519,9 @@ class CallbackSpec: QuickSpec {
                     var zipped: Callback<(Int, Bool)>!
 
                     beforeEach {
+                        subject = .init(start: wrapper.start,
+                                        stop: wrapper.stop)
+
                         wrapper2 = .init()
                         subject2 = .init(start: wrapper2.start,
                                          stop: wrapper2.stop)
@@ -626,34 +633,11 @@ class CallbackSpec: QuickSpec {
                         }
                     }
                 }
-            }
-        }
 
-        describe("ResultCallback") {
-            var wrapper: ResultSubjectWrapper<Int, TestError>!
-            var subject: ResultCallback<Int, TestError>! {
-                get {
-                    wrapper.value
-                }
-                set {
-                    wrapper.set(newValue)
-                }
-            }
-
-            beforeEach {
-                wrapper = .init()
-            }
-
-            describe("instances") {
-                beforeEach {
-                    subject = .init(start: wrapper.start,
-                                    stop: wrapper.stop)
-                }
-
-                describe("zip") {
-                    var result: Result<(Int, Bool), TestError>!
-                    var wrapper2: ResultSubjectWrapper<Bool, TestError>!
-                    var subject2: ResultCallback<Bool, TestError>! {
+                describe("zip array") {
+                    var result: [Int]!
+                    var wrapper2: SubjectWrapper<Int>!
+                    var subject2: Callback<Int>! {
                         get {
                             wrapper2.value
                         }
@@ -662,94 +646,23 @@ class CallbackSpec: QuickSpec {
                         }
                     }
 
-                    var zipped: ResultCallback<(Int, Bool), TestError>!
+                    var zipped: Callback<[Int]>!
 
                     beforeEach {
+                        subject = .init(start: wrapper.start,
+                                        stop: wrapper.stop)
+
                         wrapper2 = .init()
                         subject2 = .init(start: wrapper2.start,
                                          stop: wrapper2.stop)
 
-                        zipped = zip(subject, subject2)
+                        zipped = zip([subject, subject2])
                     }
 
                     afterEach {
                         subject = nil
                         subject2 = nil
                         zipped = nil
-                    }
-
-                    let itBehavesLikeFirstWithError: (Bool) -> Void = { independent in
-                        context("when resolved the first with error") {
-                            beforeEach {
-                                wrapper.action?(.failure(.anyError1))
-                            }
-
-                            it("should receive result") {
-                                expect(result.error).to(equal(.anyError1))
-                            }
-
-                            it("should not call stop") {
-                                expect(wrapper.stopped).to(beFalse())
-                            }
-
-                            if independent {
-                                it("should call stop") {
-                                    expect(wrapper2.stopped).to(beTrue())
-                                }
-                            }
-
-                            context("when both are completed") {
-                                beforeEach {
-                                    wrapper.value = nil
-                                    wrapper2.value = nil
-                                }
-
-                                it("should stopped and removed from memory") {
-                                    expect(wrapper.stopped).to(beTrue())
-                                    expect(wrapper2.stopped).to(beTrue())
-
-                                    expect(wrapper.weakValue).to(beNil())
-                                    expect(wrapper2.weakValue).to(beNil())
-                                }
-                            }
-                        }
-                    }
-
-                    let itBehavesLikeSecondWithError: (Bool) -> Void = { independent in
-                        context("when resolved the second with error") {
-                            beforeEach {
-                                wrapper2.action?(.failure(.anyError2))
-                            }
-
-                            it("should receive result") {
-                                expect(result.error).to(equal(.anyError2))
-                            }
-
-                            it("should not call stop") {
-                                expect(wrapper2.stopped).to(beFalse())
-                            }
-
-                            if independent {
-                                it("should call stop") {
-                                    expect(wrapper.stopped).to(beTrue())
-                                }
-                            }
-
-                            context("when both are completed") {
-                                beforeEach {
-                                    wrapper.value = nil
-                                    wrapper2.value = nil
-                                }
-
-                                it("should stopped and removed from memory") {
-                                    expect(wrapper.stopped).to(beTrue())
-                                    expect(wrapper2.stopped).to(beTrue())
-
-                                    expect(wrapper.weakValue).to(beNil())
-                                    expect(wrapper2.weakValue).to(beNil())
-                                }
-                            }
-                        }
                     }
 
                     it("should not start yet") {
@@ -777,22 +690,9 @@ class CallbackSpec: QuickSpec {
                             expect(result).to(beNil())
                         }
 
-                        context("should selfRetain both") {
-                            beforeEach {
-                                wrapper.value = nil
-                                wrapper2.value = nil
-                                zipped = nil
-                            }
-
-                            it("should not call stop") {
-                                expect(wrapper.stopped).to(beFalse())
-                                expect(wrapper2.stopped).to(beFalse())
-                            }
-                        }
-
                         context("when resolved the first") {
                             beforeEach {
-                                wrapper.action?(.success(1))
+                                wrapper.action?(1)
                             }
 
                             it("should not receive result") {
@@ -801,13 +701,11 @@ class CallbackSpec: QuickSpec {
 
                             context("when resolved the second") {
                                 beforeEach {
-                                    wrapper2.action?(.success(true))
+                                    wrapper2.action?(2)
                                 }
 
                                 it("should receive result") {
-                                    let value = result.value
-                                    expect(value?.0).to(equal(1))
-                                    expect(value?.1).to(beTrue())
+                                    expect(result).to(equal([1, 2]))
                                 }
 
                                 context("when both are completed") {
@@ -825,13 +723,11 @@ class CallbackSpec: QuickSpec {
                                     }
                                 }
                             }
-
-                            itBehavesLikeSecondWithError(false)
                         }
 
                         context("when resolved the second") {
                             beforeEach {
-                                wrapper2.action?(.success(true))
+                                wrapper2.action?(2)
                             }
 
                             it("should not receive result") {
@@ -840,13 +736,11 @@ class CallbackSpec: QuickSpec {
 
                             context("when resolved the first") {
                                 beforeEach {
-                                    wrapper.action?(.success(1))
+                                    wrapper.action?(1)
                                 }
 
                                 it("should receive result") {
-                                    let value = result.value
-                                    expect(value?.0).to(equal(1))
-                                    expect(value?.1).to(beTrue())
+                                    expect(result).to(equal([1, 2]))
                                 }
 
                                 context("when both are completed") {
@@ -863,500 +757,963 @@ class CallbackSpec: QuickSpec {
                                         expect(wrapper2.weakValue).to(beNil())
                                     }
                                 }
+                            }
+                        }
+                    }
+                }
+            }
 
-                                itBehavesLikeFirstWithError(false)
+            describe("Callback with collections") {
+                var wrapper: SubjectWrapper<[Int?]>!
+                var subject: Callback<[Int?]>! {
+                    get {
+                        wrapper.value
+                    }
+                    set {
+                        wrapper.set(newValue)
+                    }
+                }
+
+                beforeEach {
+                    wrapper = .init()
+                    subject = .init(start: wrapper.start,
+                                    stop: wrapper.stop)
+                }
+
+                describe("filterNils") {
+                    var result: [Int]!
+                    var originalResult: [Int?]!
+                    var mapped: Callback<[Int]>!
+
+                    context("when no nils") {
+                        beforeEach {
+                            subject.onComplete({ originalResult = $0 })
+                            mapped = subject.filterNils()
+                            mapped.onComplete({ result = $0 })
+
+                            wrapper.action?([1, 2, 3])
+                        }
+
+                        it("should be other instance") {
+                            expect(mapped).toNot(be(subject))
+                        }
+
+                        it("should be receive original result") {
+                            expect(originalResult).to(equal([1, 2, 3]))
+                        }
+
+                        it("should be receive mapped result") {
+                            expect(result).to(equal([1, 2, 3]))
+                        }
+                    }
+
+                    context("when has nils") {
+                        beforeEach {
+                            subject.onComplete({ originalResult = $0 })
+                            mapped = subject.filterNils()
+                            mapped.onComplete({ result = $0 })
+
+                            wrapper.action?([1, nil, 2, nil, 3])
+                        }
+
+                        it("should be other instance") {
+                            expect(mapped).toNot(be(subject))
+                        }
+
+                        it("should be receive original result") {
+                            expect(originalResult).to(equal([1, nil, 2, nil, 3]))
+                        }
+
+                        it("should be receive mapped result") {
+                            expect(result).to(equal([1, 2, 3]))
+                        }
+                    }
+                }
+            }
+
+            describe("ResultCallback with collections") {
+                var wrapper: SubjectWrapper<Result<[Int?], TestError>>!
+                var subject: ResultCallback<[Int?], TestError>! {
+                    get {
+                        wrapper.value
+                    }
+                    set {
+                        wrapper.set(newValue)
+                    }
+                }
+
+                beforeEach {
+                    wrapper = .init()
+                    subject = .init(start: wrapper.start,
+                                    stop: wrapper.stop)
+                }
+
+                describe("filterNils") {
+                    var result: Result<[Int], TestError>!
+                    var originalResult: Result<[Int?], TestError>!
+                    var mapped: ResultCallback<[Int], TestError>!
+
+                    context("when no nils") {
+                        beforeEach {
+                            subject.onComplete({ originalResult = $0 })
+                            mapped = subject.filterNils()
+                            mapped.onComplete({ result = $0 })
+
+                            wrapper.action?(.success([1, 2, 3]))
+                        }
+
+                        it("should be other instance") {
+                            expect(mapped).toNot(be(subject))
+                        }
+
+                        it("should be receive original result") {
+                            expect(originalResult).to(equal(.success([1, 2, 3])))
+                        }
+
+                        it("should be receive mapped result") {
+                            expect(result).to(equal(.success([1, 2, 3])))
+                        }
+                    }
+
+                    context("when has nils") {
+                        beforeEach {
+                            subject.onComplete({ originalResult = $0 })
+                            mapped = subject.filterNils()
+                            mapped.onComplete({ result = $0 })
+
+                            wrapper.action?(.success([1, nil, 2, nil, 3]))
+                        }
+
+                        it("should be other instance") {
+                            expect(mapped).toNot(be(subject))
+                        }
+
+                        it("should be receive original result") {
+                            expect(originalResult).to(equal(.success([1, nil, 2, nil, 3])))
+                        }
+
+                        it("should be receive mapped result") {
+                            expect(result).to(equal(.success([1, 2, 3])))
+                        }
+                    }
+                }
+            }
+
+            describe("ResultCallback") {
+                var wrapper: ResultSubjectWrapper<Int, TestError>!
+                var subject: ResultCallback<Int, TestError>! {
+                    get {
+                        wrapper.value
+                    }
+                    set {
+                        wrapper.set(newValue)
+                    }
+                }
+
+                beforeEach {
+                    wrapper = .init()
+                }
+
+                describe("instances") {
+                    beforeEach {
+                        subject = .init(start: wrapper.start,
+                                        stop: wrapper.stop)
+                    }
+
+                    describe("zip") {
+                        var result: Result<(Int, Bool), TestError>!
+                        var wrapper2: ResultSubjectWrapper<Bool, TestError>!
+                        var subject2: ResultCallback<Bool, TestError>! {
+                            get {
+                                wrapper2.value
+                            }
+                            set {
+                                wrapper2.set(newValue)
                             }
                         }
 
-                        itBehavesLikeFirstWithError(true)
-                        itBehavesLikeSecondWithError(true)
+                        var zipped: ResultCallback<(Int, Bool), TestError>!
+
+                        beforeEach {
+                            wrapper2 = .init()
+                            subject2 = .init(start: wrapper2.start,
+                                             stop: wrapper2.stop)
+
+                            zipped = zip(subject, subject2)
+                        }
+
+                        afterEach {
+                            subject = nil
+                            subject2 = nil
+                            zipped = nil
+                        }
+
+                        let itBehavesLikeFirstWithError: (Bool) -> Void = { independent in
+                            context("when resolved the first with error") {
+                                beforeEach {
+                                    wrapper.action?(.failure(.anyError1))
+                                }
+
+                                it("should receive result") {
+                                    expect(result.error).to(equal(.anyError1))
+                                }
+
+                                it("should not call stop") {
+                                    expect(wrapper.stopped).to(beFalse())
+                                }
+
+                                if independent {
+                                    it("should call stop") {
+                                        expect(wrapper2.stopped).to(beTrue())
+                                    }
+                                }
+
+                                context("when both are completed") {
+                                    beforeEach {
+                                        wrapper.value = nil
+                                        wrapper2.value = nil
+                                    }
+
+                                    it("should stopped and removed from memory") {
+                                        expect(wrapper.stopped).to(beTrue())
+                                        expect(wrapper2.stopped).to(beTrue())
+
+                                        expect(wrapper.weakValue).to(beNil())
+                                        expect(wrapper2.weakValue).to(beNil())
+                                    }
+                                }
+                            }
+                        }
+
+                        let itBehavesLikeSecondWithError: (Bool) -> Void = { independent in
+                            context("when resolved the second with error") {
+                                beforeEach {
+                                    wrapper2.action?(.failure(.anyError2))
+                                }
+
+                                it("should receive result") {
+                                    expect(result.error).to(equal(.anyError2))
+                                }
+
+                                it("should not call stop") {
+                                    expect(wrapper2.stopped).to(beFalse())
+                                }
+
+                                if independent {
+                                    it("should call stop") {
+                                        expect(wrapper.stopped).to(beTrue())
+                                    }
+                                }
+
+                                context("when both are completed") {
+                                    beforeEach {
+                                        wrapper.value = nil
+                                        wrapper2.value = nil
+                                    }
+
+                                    it("should stopped and removed from memory") {
+                                        expect(wrapper.stopped).to(beTrue())
+                                        expect(wrapper2.stopped).to(beTrue())
+
+                                        expect(wrapper.weakValue).to(beNil())
+                                        expect(wrapper2.weakValue).to(beNil())
+                                    }
+                                }
+                            }
+                        }
+
+                        it("should not start yet") {
+                            expect(wrapper.started).to(beFalse())
+                            expect(wrapper2.started).to(beFalse())
+                        }
+
+                        context("when started") {
+                            beforeEach {
+                                zipped.onComplete(options: .weakness) {
+                                    result = $0
+                                }
+                            }
+
+                            afterEach {
+                                result = nil
+                            }
+
+                            it("should not start yet") {
+                                expect(wrapper.started).to(beTrue())
+                                expect(wrapper2.started).to(beTrue())
+                            }
+
+                            it("should not receive result") {
+                                expect(result).to(beNil())
+                            }
+
+                            context("should selfRetain both") {
+                                beforeEach {
+                                    wrapper.value = nil
+                                    wrapper2.value = nil
+                                    zipped = nil
+                                }
+
+                                it("should not call stop") {
+                                    expect(wrapper.stopped).to(beFalse())
+                                    expect(wrapper2.stopped).to(beFalse())
+                                }
+                            }
+
+                            context("when resolved the first") {
+                                beforeEach {
+                                    wrapper.action?(.success(1))
+                                }
+
+                                it("should not receive result") {
+                                    expect(result).to(beNil())
+                                }
+
+                                context("when resolved the second") {
+                                    beforeEach {
+                                        wrapper2.action?(.success(true))
+                                    }
+
+                                    it("should receive result") {
+                                        let value = result.value
+                                        expect(value?.0).to(equal(1))
+                                        expect(value?.1).to(beTrue())
+                                    }
+
+                                    context("when both are completed") {
+                                        beforeEach {
+                                            wrapper.value = nil
+                                            wrapper2.value = nil
+                                        }
+
+                                        it("should stopped and removed from memory") {
+                                            expect(wrapper.stopped).to(beTrue())
+                                            expect(wrapper2.stopped).to(beTrue())
+
+                                            expect(wrapper.weakValue).to(beNil())
+                                            expect(wrapper2.weakValue).to(beNil())
+                                        }
+                                    }
+                                }
+
+                                itBehavesLikeSecondWithError(false)
+                            }
+
+                            context("when resolved the second") {
+                                beforeEach {
+                                    wrapper2.action?(.success(true))
+                                }
+
+                                it("should not receive result") {
+                                    expect(result).to(beNil())
+                                }
+
+                                context("when resolved the first") {
+                                    beforeEach {
+                                        wrapper.action?(.success(1))
+                                    }
+
+                                    it("should receive result") {
+                                        let value = result.value
+                                        expect(value?.0).to(equal(1))
+                                        expect(value?.1).to(beTrue())
+                                    }
+
+                                    context("when both are completed") {
+                                        beforeEach {
+                                            wrapper.value = nil
+                                            wrapper2.value = nil
+                                        }
+
+                                        it("should stopped and removed from memory") {
+                                            expect(wrapper.stopped).to(beTrue())
+                                            expect(wrapper2.stopped).to(beTrue())
+
+                                            expect(wrapper.weakValue).to(beNil())
+                                            expect(wrapper2.weakValue).to(beNil())
+                                        }
+                                    }
+
+                                    itBehavesLikeFirstWithError(false)
+                                }
+                            }
+
+                            itBehavesLikeFirstWithError(true)
+                            itBehavesLikeSecondWithError(true)
+                        }
+                    }
+
+                    describe("mapError") {
+                        var result: Result<Int, TestError2>!
+                        var originalResult: Result<Int, TestError>!
+                        var mapped: ResultCallback<Int, TestError2>!
+
+                        beforeEach {
+                            subject.onComplete({ originalResult = $0 })
+                            mapped = subject.mapError({ _ in return TestError2.anyError })
+                            mapped.onComplete({ result = $0 })
+                        }
+
+                        it("should be other instance") {
+                            expect(mapped).toNot(be(subject))
+                        }
+
+                        context("when original value is 0") {
+                            beforeEach {
+                                subject.complete(0)
+                            }
+
+                            it("should be receive mapped result") {
+                                expect(result.value).to(equal(0))
+                            }
+
+                            it("should be receive original result") {
+                                expect(originalResult.value).to(equal(0))
+                            }
+                        }
+
+                        context("when original value is less then 0") {
+                            beforeEach {
+                                subject.complete(-1)
+                            }
+
+                            it("should be receive mapped result") {
+                                expect(result.value).to(equal(-1))
+                            }
+
+                            it("should be receive original result") {
+                                expect(originalResult.value).to(equal(-1))
+                            }
+                        }
+
+                        context("when original value is greater then 0") {
+                            beforeEach {
+                                subject.complete(1)
+                            }
+
+                            it("should be receive mapped result") {
+                                expect(result.value).to(equal(1))
+                            }
+
+                            it("should be receive original result") {
+                                expect(originalResult.value).to(equal(1))
+                            }
+                        }
+
+                        context("when received error .anyError1") {
+                            beforeEach {
+                                subject.complete(.anyError1)
+                            }
+
+                            it("should receive the same error as result") {
+                                expect(result.error).to(equal(.anyError))
+                            }
+
+                            it("should receive the same error as original result") {
+                                expect(originalResult.error).to(equal(.anyError1))
+                            }
+                        }
+
+                        context("when received error .anyError2") {
+                            beforeEach {
+                                subject.complete(.anyError2)
+                            }
+
+                            it("should receive the same error as result") {
+                                expect(result.error).to(equal(.anyError))
+                            }
+
+                            it("should receive the same error as original result") {
+                                expect(originalResult.error).to(equal(.anyError2))
+                            }
+                        }
+                    }
+
+                    describe("map") {
+                        var result: Result<Bool, TestError>!
+                        var originalResult: Result<Int, TestError>!
+                        var mapped: ResultCallback<Bool, TestError>!
+
+                        beforeEach {
+                            subject.onComplete({ originalResult = $0 })
+                            mapped = subject.map({ $0 > 0 })
+                            mapped.onComplete({ result = $0 })
+                        }
+
+                        it("should be other instance") {
+                            expect(mapped).toNot(be(subject))
+                        }
+
+                        context("when original value is 0") {
+                            beforeEach {
+                                subject.complete(0)
+                            }
+
+                            it("should be receive mapped result") {
+                                expect(result.value).to(beFalse())
+                            }
+
+                            it("should be receive original result") {
+                                expect(originalResult.value).to(equal(0))
+                            }
+                        }
+
+                        context("when original value is less then 0") {
+                            beforeEach {
+                                subject.complete(-1)
+                            }
+
+                            it("should be receive mapped result") {
+                                expect(result.value).to(beFalse())
+                            }
+
+                            it("should be receive original result") {
+                                expect(originalResult.value).to(equal(-1))
+                            }
+                        }
+
+                        context("when original value is greater then 0") {
+                            beforeEach {
+                                subject.complete(1)
+                            }
+
+                            it("should be receive mapped result") {
+                                expect(result.value).to(beTrue())
+                            }
+
+                            it("should be receive original result") {
+                                expect(originalResult.value).to(equal(1))
+                            }
+                        }
+
+                        context("when received error .anyError1") {
+                            beforeEach {
+                                subject.complete(.anyError1)
+                            }
+
+                            it("should receive the same error as result") {
+                                expect(result.error).to(equal(.anyError1))
+                            }
+
+                            it("should receive the same error as original result") {
+                                expect(originalResult.error).to(equal(.anyError1))
+                            }
+                        }
+
+                        context("when received error .anyError2") {
+                            beforeEach {
+                                subject.complete(.anyError2)
+                            }
+
+                            it("should receive the same error as result") {
+                                expect(result.error).to(equal(.anyError2))
+                            }
+
+                            it("should receive the same error as original result") {
+                                expect(originalResult.error).to(equal(.anyError2))
+                            }
+                        }
+                    }
+
+                    describe("recover with error mapping") {
+                        var result: Int!
+                        var originalResult: Result<Int, TestError>!
+                        var mapped: Callback<Int>!
+
+                        beforeEach {
+                            subject.onComplete({ originalResult = $0 })
+                            mapped = subject.recover({ $0 == .anyError1 ? 1 : 2 })
+                            mapped.onComplete({ result = $0 })
+                        }
+
+                        it("should be other instance") {
+                            expect(mapped).toNot(be(subject))
+                        }
+
+                        context("when original value is 0") {
+                            beforeEach {
+                                subject.complete(0)
+                            }
+
+                            it("should be receive mapped result") {
+                                expect(result).to(equal(0))
+                            }
+
+                            it("should be receive original result") {
+                                expect(originalResult.value).to(equal(0))
+                            }
+                        }
+
+                        context("when original value is less then 0") {
+                            beforeEach {
+                                subject.complete(-1)
+                            }
+
+                            it("should be receive mapped result") {
+                                expect(result).to(equal(-1))
+                            }
+
+                            it("should be receive original result") {
+                                expect(originalResult.value).to(equal(-1))
+                            }
+                        }
+
+                        context("when original value is greater then 0") {
+                            beforeEach {
+                                subject.complete(1)
+                            }
+
+                            it("should be receive mapped result") {
+                                expect(result).to(equal(1))
+                            }
+
+                            it("should be receive original result") {
+                                expect(originalResult.value).to(equal(1))
+                            }
+                        }
+
+                        context("when received error .anyError1") {
+                            beforeEach {
+                                subject.complete(.anyError1)
+                            }
+
+                            it("should receive the same error as result") {
+                                expect(result).to(equal(1))
+                            }
+
+                            it("should receive the same error as original result") {
+                                expect(originalResult.error).to(equal(.anyError1))
+                            }
+                        }
+
+                        context("when received error .anyError2") {
+                            beforeEach {
+                                subject.complete(.anyError2)
+                            }
+
+                            it("should receive the same error as result") {
+                                expect(result).to(equal(2))
+                            }
+
+                            it("should receive the same error as original result") {
+                                expect(originalResult.error).to(equal(.anyError2))
+                            }
+                        }
+                    }
+
+                    describe("recover with static value") {
+                        var result: Int!
+                        var originalResult: Result<Int, TestError>!
+                        var mapped: Callback<Int>!
+
+                        beforeEach {
+                            subject.onComplete({ originalResult = $0 })
+                            mapped = subject.recover(1)
+                            mapped.onComplete({ result = $0 })
+                        }
+
+                        it("should be other instance") {
+                            expect(mapped).toNot(be(subject))
+                        }
+
+                        context("when original value is 0") {
+                            beforeEach {
+                                subject.complete(0)
+                            }
+
+                            it("should be receive mapped result") {
+                                expect(result).to(equal(0))
+                            }
+
+                            it("should be receive original result") {
+                                expect(originalResult.value).to(equal(0))
+                            }
+                        }
+
+                        context("when original value is less then 0") {
+                            beforeEach {
+                                subject.complete(-1)
+                            }
+
+                            it("should be receive mapped result") {
+                                expect(result).to(equal(-1))
+                            }
+
+                            it("should be receive original result") {
+                                expect(originalResult.value).to(equal(-1))
+                            }
+                        }
+
+                        context("when original value is greater then 0") {
+                            beforeEach {
+                                subject.complete(1)
+                            }
+
+                            it("should be receive mapped result") {
+                                expect(result).to(equal(1))
+                            }
+
+                            it("should be receive original result") {
+                                expect(originalResult.value).to(equal(1))
+                            }
+                        }
+
+                        context("when received error .anyError1") {
+                            beforeEach {
+                                subject.complete(.anyError1)
+                            }
+
+                            it("should receive the same error as result") {
+                                expect(result).to(equal(1))
+                            }
+
+                            it("should receive the same error as original result") {
+                                expect(originalResult.error).to(equal(.anyError1))
+                            }
+                        }
+
+                        context("when received error .anyError2") {
+                            beforeEach {
+                                subject.complete(.anyError2)
+                            }
+
+                            it("should receive the same error as result") {
+                                expect(result).to(equal(1))
+                            }
+
+                            it("should receive the same error as original result") {
+                                expect(originalResult.error).to(equal(.anyError2))
+                            }
+                        }
+                    }
+
+                    describe("recover with nil") {
+                        var result: Int?
+                        var originalResult: Result<Int, TestError>!
+                        var mapped: Callback<Int?>!
+
+                        beforeEach {
+                            subject.onComplete({ originalResult = $0 })
+                            mapped = subject.recoverNil()
+                            mapped.onComplete({ result = $0 })
+                        }
+
+                        it("should be other instance") {
+                            expect(mapped).toNot(be(subject))
+                        }
+
+                        context("when original value is 0") {
+                            beforeEach {
+                                subject.complete(0)
+                            }
+
+                            it("should be receive mapped result") {
+                                expect(result).to(equal(0))
+                            }
+
+                            it("should be receive original result") {
+                                expect(originalResult.value).to(equal(0))
+                            }
+                        }
+
+                        context("when original value is less then 0") {
+                            beforeEach {
+                                subject.complete(-1)
+                            }
+
+                            it("should be receive mapped result") {
+                                expect(result).to(equal(-1))
+                            }
+
+                            it("should be receive original result") {
+                                expect(originalResult.value).to(equal(-1))
+                            }
+                        }
+
+                        context("when original value is greater then 0") {
+                            beforeEach {
+                                subject.complete(1)
+                            }
+
+                            it("should be receive mapped result") {
+                                expect(result).to(equal(1))
+                            }
+
+                            it("should be receive original result") {
+                                expect(originalResult.value).to(equal(1))
+                            }
+                        }
+
+                        context("when received error .anyError1") {
+                            beforeEach {
+                                subject.complete(.anyError1)
+                            }
+
+                            it("should receive the same error as result") {
+                                expect(result).to(beNil())
+                            }
+
+                            it("should receive the same error as original result") {
+                                expect(originalResult.error).to(equal(.anyError1))
+                            }
+                        }
+
+                        context("when received error .anyError2") {
+                            beforeEach {
+                                subject.complete(.anyError2)
+                            }
+
+                            it("should receive the same error as result") {
+                                expect(result).to(beNil())
+                            }
+
+                            it("should receive the same error as original result") {
+                                expect(originalResult.error).to(equal(.anyError2))
+                            }
+                        }
+                    }
+
+                    describe("recover with dynamic value") {
+                        var value: Int!
+                        var result: Int!
+                        var originalResult: Result<Int, TestError>!
+                        var mapped: Callback<Int>!
+
+                        beforeEach {
+                            value = (0...10).randomElement() ?? 3
+                            subject.onComplete({ originalResult = $0 })
+                            mapped = subject.recover({ value })
+                            mapped.onComplete({ result = $0 })
+                        }
+
+                        it("should be other instance") {
+                            expect(mapped).toNot(be(subject))
+                        }
+
+                        context("when original value is 0") {
+                            beforeEach {
+                                subject.complete(0)
+                            }
+
+                            it("should be receive mapped result") {
+                                expect(result).to(equal(0))
+                            }
+
+                            it("should be receive original result") {
+                                expect(originalResult.value).to(equal(0))
+                            }
+                        }
+
+                        context("when original value is less then 0") {
+                            beforeEach {
+                                subject.complete(-1)
+                            }
+
+                            it("should be receive mapped result") {
+                                expect(result).to(equal(-1))
+                            }
+
+                            it("should be receive original result") {
+                                expect(originalResult.value).to(equal(-1))
+                            }
+                        }
+
+                        context("when original value is greater then 0") {
+                            beforeEach {
+                                subject.complete(1)
+                            }
+
+                            it("should be receive mapped result") {
+                                expect(result).to(equal(1))
+                            }
+
+                            it("should be receive original result") {
+                                expect(originalResult.value).to(equal(1))
+                            }
+                        }
+
+                        context("when received error .anyError1") {
+                            beforeEach {
+                                subject.complete(.anyError1)
+                            }
+
+                            it("should receive the same error as result") {
+                                expect(result).to(equal(value))
+                            }
+
+                            it("should receive the same error as original result") {
+                                expect(originalResult.error).to(equal(.anyError1))
+                            }
+                        }
+
+                        context("when received error .anyError2") {
+                            beforeEach {
+                                subject.complete(.anyError2)
+                            }
+
+                            it("should receive the same error as result") {
+                                expect(result).to(equal(value))
+                            }
+
+                            it("should receive the same error as original result") {
+                                expect(originalResult.error).to(equal(.anyError2))
+                            }
+                        }
                     }
                 }
 
-                describe("mapError") {
-                    var result: Result<Int, TestError2>!
-                    var originalResult: Result<Int, TestError>!
-                    var mapped: ResultCallback<Int, TestError2>!
+                describe("static succes with result") {
+                    var result: Result<Int, TestError>!
 
                     beforeEach {
-                        subject.onComplete({ originalResult = $0 })
-                        mapped = subject.mapError({ _ in return TestError2.anyError })
-                        mapped.onComplete({ result = $0 })
+                        subject = .success(1)
                     }
 
-                    it("should be other instance") {
-                        expect(mapped).toNot(be(subject))
-                    }
-
-                    context("when original value is 0") {
+                    describe("weakness") {
                         beforeEach {
-                            subject.complete(0)
+                            subject.onComplete(options: .weakness, { result = $0 })
                         }
 
-                        it("should be receive mapped result") {
-                            expect(result.value).to(equal(0))
-                        }
-
-                        it("should be receive original result") {
-                            expect(originalResult.value).to(equal(0))
-                        }
-                    }
-
-                    context("when original value is less then 0") {
-                        beforeEach {
-                            subject.complete(-1)
-                        }
-
-                        it("should be receive mapped result") {
-                            expect(result.value).to(equal(-1))
-                        }
-
-                        it("should be receive original result") {
-                            expect(originalResult.value).to(equal(-1))
-                        }
-                    }
-
-                    context("when original value is greater then 0") {
-                        beforeEach {
-                            subject.complete(1)
-                        }
-
-                        it("should be receive mapped result") {
+                        it("should receive result") {
                             expect(result.value).to(equal(1))
                         }
 
-                        it("should be receive original result") {
-                            expect(originalResult.value).to(equal(1))
-                        }
-                    }
+                        context("when destructed") {
+                            beforeEach {
+                                wrapper.value = nil
+                            }
 
-                    context("when received error .anyError1") {
-                        beforeEach {
-                            subject.complete(.anyError1)
-                        }
-
-                        it("should receive the same error as result") {
-                            expect(result.error).to(equal(.anyError))
-                        }
-
-                        it("should receive the same error as original result") {
-                            expect(originalResult.error).to(equal(.anyError1))
-                        }
-                    }
-
-                    context("when received error .anyError2") {
-                        beforeEach {
-                            subject.complete(.anyError2)
-                        }
-
-                        it("should receive the same error as result") {
-                            expect(result.error).to(equal(.anyError))
-                        }
-
-                        it("should receive the same error as original result") {
-                            expect(originalResult.error).to(equal(.anyError2))
+                            it("should be removed from memory") {
+                                expect(wrapper.weakValue).to(beNil())
+                            }
                         }
                     }
                 }
 
-                describe("map") {
-                    var result: Result<Bool, TestError>!
-                    var originalResult: Result<Int, TestError>!
-                    var mapped: ResultCallback<Bool, TestError>!
+                describe("static failure with error") {
+                    var result: Result<Int, TestError>!
 
                     beforeEach {
-                        subject.onComplete({ originalResult = $0 })
-                        mapped = subject.map({ $0 > 0 })
-                        mapped.onComplete({ result = $0 })
+                        subject = .failure(.anyError1)
                     }
 
-                    it("should be other instance") {
-                        expect(mapped).toNot(be(subject))
-                    }
-
-                    context("when original value is 0") {
+                    describe("weakness") {
                         beforeEach {
-                            subject.complete(0)
+                            subject.onComplete(options: .weakness, { result = $0 })
                         }
 
-                        it("should be receive mapped result") {
-                            expect(result.value).to(beFalse())
-                        }
-
-                        it("should be receive original result") {
-                            expect(originalResult.value).to(equal(0))
-                        }
-                    }
-
-                    context("when original value is less then 0") {
-                        beforeEach {
-                            subject.complete(-1)
-                        }
-
-                        it("should be receive mapped result") {
-                            expect(result.value).to(beFalse())
-                        }
-
-                        it("should be receive original result") {
-                            expect(originalResult.value).to(equal(-1))
-                        }
-                    }
-
-                    context("when original value is greater then 0") {
-                        beforeEach {
-                            subject.complete(1)
-                        }
-
-                        it("should be receive mapped result") {
-                            expect(result.value).to(beTrue())
-                        }
-
-                        it("should be receive original result") {
-                            expect(originalResult.value).to(equal(1))
-                        }
-                    }
-
-                    context("when received error .anyError1") {
-                        beforeEach {
-                            subject.complete(.anyError1)
-                        }
-
-                        it("should receive the same error as result") {
+                        it("should receive result") {
                             expect(result.error).to(equal(.anyError1))
                         }
 
-                        it("should receive the same error as original result") {
-                            expect(originalResult.error).to(equal(.anyError1))
-                        }
-                    }
-
-                    context("when received error .anyError2") {
-                        beforeEach {
-                            subject.complete(.anyError2)
-                        }
-
-                        it("should receive the same error as result") {
-                            expect(result.error).to(equal(.anyError2))
-                        }
-
-                        it("should receive the same error as original result") {
-                            expect(originalResult.error).to(equal(.anyError2))
-                        }
-                    }
-                }
-
-                describe("recover with error mapping") {
-                    var result: Int!
-                    var originalResult: Result<Int, TestError>!
-                    var mapped: Callback<Int>!
-
-                    beforeEach {
-                        subject.onComplete({ originalResult = $0 })
-                        mapped = subject.recover({ $0 == .anyError1 ? 1 : 2 })
-                        mapped.onComplete({ result = $0 })
-                    }
-
-                    it("should be other instance") {
-                        expect(mapped).toNot(be(subject))
-                    }
-
-                    context("when original value is 0") {
-                        beforeEach {
-                            subject.complete(0)
-                        }
-
-                        it("should be receive mapped result") {
-                            expect(result).to(equal(0))
-                        }
-
-                        it("should be receive original result") {
-                            expect(originalResult.value).to(equal(0))
-                        }
-                    }
-
-                    context("when original value is less then 0") {
-                        beforeEach {
-                            subject.complete(-1)
-                        }
-
-                        it("should be receive mapped result") {
-                            expect(result).to(equal(-1))
-                        }
-
-                        it("should be receive original result") {
-                            expect(originalResult.value).to(equal(-1))
-                        }
-                    }
-
-                    context("when original value is greater then 0") {
-                        beforeEach {
-                            subject.complete(1)
-                        }
-
-                        it("should be receive mapped result") {
-                            expect(result).to(equal(1))
-                        }
-
-                        it("should be receive original result") {
-                            expect(originalResult.value).to(equal(1))
-                        }
-                    }
-
-                    context("when received error .anyError1") {
-                        beforeEach {
-                            subject.complete(.anyError1)
-                        }
-
-                        it("should receive the same error as result") {
-                            expect(result).to(equal(1))
-                        }
-
-                        it("should receive the same error as original result") {
-                            expect(originalResult.error).to(equal(.anyError1))
-                        }
-                    }
-
-                    context("when received error .anyError2") {
-                        beforeEach {
-                            subject.complete(.anyError2)
-                        }
-
-                        it("should receive the same error as result") {
-                            expect(result).to(equal(2))
-                        }
-
-                        it("should receive the same error as original result") {
-                            expect(originalResult.error).to(equal(.anyError2))
-                        }
-                    }
-                }
-
-                describe("recover with static value") {
-                    var result: Int!
-                    var originalResult: Result<Int, TestError>!
-                    var mapped: Callback<Int>!
-
-                    beforeEach {
-                        subject.onComplete({ originalResult = $0 })
-                        mapped = subject.recover(1)
-                        mapped.onComplete({ result = $0 })
-                    }
-
-                    it("should be other instance") {
-                        expect(mapped).toNot(be(subject))
-                    }
-
-                    context("when original value is 0") {
-                        beforeEach {
-                            subject.complete(0)
-                        }
-
-                        it("should be receive mapped result") {
-                            expect(result).to(equal(0))
-                        }
-
-                        it("should be receive original result") {
-                            expect(originalResult.value).to(equal(0))
-                        }
-                    }
-
-                    context("when original value is less then 0") {
-                        beforeEach {
-                            subject.complete(-1)
-                        }
-
-                        it("should be receive mapped result") {
-                            expect(result).to(equal(-1))
-                        }
-
-                        it("should be receive original result") {
-                            expect(originalResult.value).to(equal(-1))
-                        }
-                    }
-
-                    context("when original value is greater then 0") {
-                        beforeEach {
-                            subject.complete(1)
-                        }
-
-                        it("should be receive mapped result") {
-                            expect(result).to(equal(1))
-                        }
-
-                        it("should be receive original result") {
-                            expect(originalResult.value).to(equal(1))
-                        }
-                    }
-
-                    context("when received error .anyError1") {
-                        beforeEach {
-                            subject.complete(.anyError1)
-                        }
-
-                        it("should receive the same error as result") {
-                            expect(result).to(equal(1))
-                        }
-
-                        it("should receive the same error as original result") {
-                            expect(originalResult.error).to(equal(.anyError1))
-                        }
-                    }
-
-                    context("when received error .anyError2") {
-                        beforeEach {
-                            subject.complete(.anyError2)
-                        }
-
-                        it("should receive the same error as result") {
-                            expect(result).to(equal(1))
-                        }
-
-                        it("should receive the same error as original result") {
-                            expect(originalResult.error).to(equal(.anyError2))
-                        }
-                    }
-                }
-
-                describe("recover with dynamic value") {
-                    var value: Int!
-                    var result: Int!
-                    var originalResult: Result<Int, TestError>!
-                    var mapped: Callback<Int>!
-
-                    beforeEach {
-                        value = (0...10).randomElement() ?? 3
-                        subject.onComplete({ originalResult = $0 })
-                        mapped = subject.recover({ value })
-                        mapped.onComplete({ result = $0 })
-                    }
-
-                    it("should be other instance") {
-                        expect(mapped).toNot(be(subject))
-                    }
-
-                    context("when original value is 0") {
-                        beforeEach {
-                            subject.complete(0)
-                        }
-
-                        it("should be receive mapped result") {
-                            expect(result).to(equal(0))
-                        }
-
-                        it("should be receive original result") {
-                            expect(originalResult.value).to(equal(0))
-                        }
-                    }
-
-                    context("when original value is less then 0") {
-                        beforeEach {
-                            subject.complete(-1)
-                        }
-
-                        it("should be receive mapped result") {
-                            expect(result).to(equal(-1))
-                        }
-
-                        it("should be receive original result") {
-                            expect(originalResult.value).to(equal(-1))
-                        }
-                    }
-
-                    context("when original value is greater then 0") {
-                        beforeEach {
-                            subject.complete(1)
-                        }
-
-                        it("should be receive mapped result") {
-                            expect(result).to(equal(1))
-                        }
-
-                        it("should be receive original result") {
-                            expect(originalResult.value).to(equal(1))
-                        }
-                    }
-
-                    context("when received error .anyError1") {
-                        beforeEach {
-                            subject.complete(.anyError1)
-                        }
-
-                        it("should receive the same error as result") {
-                            expect(result).to(equal(value))
-                        }
-
-                        it("should receive the same error as original result") {
-                            expect(originalResult.error).to(equal(.anyError1))
-                        }
-                    }
-
-                    context("when received error .anyError2") {
-                        beforeEach {
-                            subject.complete(.anyError2)
-                        }
-
-                        it("should receive the same error as result") {
-                            expect(result).to(equal(value))
-                        }
-
-                        it("should receive the same error as original result") {
-                            expect(originalResult.error).to(equal(.anyError2))
-                        }
-                    }
-                }
-            }
-
-            describe("static succes with result") {
-                var result: Result<Int, TestError>!
-
-                beforeEach {
-                    subject = .success(1)
-                }
-
-                describe("weakness") {
-                    beforeEach {
-                        subject.onComplete(options: .weakness, { result = $0 })
-                    }
-
-                    it("should receive result") {
-                        expect(result.value).to(equal(1))
-                    }
-
-                    context("when destructed") {
-                        beforeEach {
-                            wrapper.value = nil
-                        }
-
-                        it("should be removed from memory") {
-                            expect(wrapper.weakValue).to(beNil())
-                        }
-                    }
-                }
-            }
-
-            describe("static failure with error") {
-                var result: Result<Int, TestError>!
-
-                beforeEach {
-                    subject = .failure(.anyError1)
-                }
-
-                describe("weakness") {
-                    beforeEach {
-                        subject.onComplete(options: .weakness, { result = $0 })
-                    }
-
-                    it("should receive result") {
-                        expect(result.error).to(equal(.anyError1))
-                    }
-
-                    context("when destructed") {
-                        beforeEach {
-                            wrapper.value = nil
-                        }
-
-                        it("should be removed from memory") {
-                            expect(wrapper.weakValue).to(beNil())
+                        context("when destructed") {
+                            beforeEach {
+                                wrapper.value = nil
+                            }
+
+                            it("should be removed from memory") {
+                                expect(wrapper.weakValue).to(beNil())
+                            }
                         }
                     }
                 }
