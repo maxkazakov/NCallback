@@ -581,7 +581,10 @@ class CallbackSpec: QuickSpec {
 
                                 context("when both are completed") {
                                     beforeEach {
+                                        wrapper.value.cancel()
                                         wrapper.value = nil
+
+                                        wrapper2.value.cancel()
                                         wrapper2.value = nil
                                     }
 
@@ -617,7 +620,10 @@ class CallbackSpec: QuickSpec {
 
                                 context("when both are completed") {
                                     beforeEach {
+                                        wrapper.value.cancel()
                                         wrapper.value = nil
+
+                                        wrapper2.value.cancel()
                                         wrapper2.value = nil
                                     }
 
@@ -970,7 +976,10 @@ class CallbackSpec: QuickSpec {
 
                                 context("when both are completed") {
                                     beforeEach {
+                                        wrapper.value.cancel()
                                         wrapper.value = nil
+
+                                        wrapper2.value.cancel()
                                         wrapper2.value = nil
                                     }
 
@@ -1007,7 +1016,10 @@ class CallbackSpec: QuickSpec {
 
                                 context("when both are completed") {
                                     beforeEach {
+                                        wrapper.value.cancel()
                                         wrapper.value = nil
+
+                                        wrapper2.value.cancel()
                                         wrapper2.value = nil
                                     }
 
@@ -1047,7 +1059,7 @@ class CallbackSpec: QuickSpec {
                                 expect(result).to(beNil())
                             }
 
-                            context("should selfRetain both") {
+                            context("should .weakness both") {
                                 beforeEach {
                                     wrapper.value = nil
                                     wrapper2.value = nil
@@ -1055,8 +1067,8 @@ class CallbackSpec: QuickSpec {
                                 }
 
                                 it("should not call stop") {
-                                    expect(wrapper.stopped).to(beFalse())
-                                    expect(wrapper2.stopped).to(beFalse())
+                                    expect(wrapper.stopped).to(beTrue())
+                                    expect(wrapper2.stopped).to(beTrue())
                                 }
                             }
 
@@ -1082,7 +1094,10 @@ class CallbackSpec: QuickSpec {
 
                                     context("when both are completed") {
                                         beforeEach {
+                                            wrapper.value.cancel()
                                             wrapper.value = nil
+
+                                            wrapper2.value.cancel()
                                             wrapper2.value = nil
                                         }
 
@@ -1121,7 +1136,10 @@ class CallbackSpec: QuickSpec {
 
                                     context("when both are completed") {
                                         beforeEach {
+                                            wrapper.value.cancel()
                                             wrapper.value = nil
+
+                                            wrapper2.value.cancel()
                                             wrapper2.value = nil
                                         }
 

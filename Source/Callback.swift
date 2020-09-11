@@ -239,31 +239,31 @@ extension Callback: Hashable {
 // MARK: - zip
 public func zip<ResponseA, ResponseB>(_ lhs: Callback<ResponseA>,
                                       _ rhs: Callback<ResponseB>) -> Callback<(ResponseA, ResponseB)> {
-    let startTask: Callback<(ResponseA, ResponseB)>.ServiceClosure = { [weak lhs, weak rhs] original in
+    let startTask: Callback<(ResponseA, ResponseB)>.ServiceClosure = { original in
         var a: ResponseA?
         var b: ResponseB?
 
-        let check = {
+        let check = { [weak original] in
             if let a = a, let b = b {
                 let result = (a, b)
-                original.complete(result)
+                original?.complete(result)
             }
         }
 
-        lhs?.onComplete(options: .selfRetained) { result in
+        lhs.onComplete(options: .weakness) { result in
             a = result
             check()
         }
 
-        rhs?.onComplete(options: .selfRetained) { result in
+        rhs.onComplete(options: .weakness) { result in
             b = result
             check()
         }
     }
 
-    let stopTask: Callback<(ResponseA, ResponseB)>.ServiceClosure = { [weak lhs, weak rhs] _ in
-        lhs?.cancel()
-        rhs?.cancel()
+    let stopTask: Callback<(ResponseA, ResponseB)>.ServiceClosure = { _ in
+        lhs.cancel()
+        rhs.cancel()
     }
 
     return .init(start: startTask,
@@ -281,7 +281,7 @@ public func zip<Response>(_ input: [Callback<Response>]) -> Callback<[Response]>
     let startTask: Callback<[Response]>.ServiceClosure = { original in
         for info in array.enumerated() {
             let offset = info.offset
-            info.element.onComplete(options: .selfRetained) { response in
+            info.element.onComplete(options: .weakness) { [weak original] response in
                 result.insert(.value(response), at: offset)
 
                 let actual: [Response] = result.compactMap {
@@ -294,7 +294,7 @@ public func zip<Response>(_ input: [Callback<Response>]) -> Callback<[Response]>
                 }
 
                 if array.count == actual.count {
-                    original.complete(actual)
+                    original?.complete(actual)
                     array.removeAll()
                 }
             }
@@ -312,26 +312,26 @@ public func zip<Response>(_ input: [Callback<Response>]) -> Callback<[Response]>
 
 public func zip<ResponseA, ResponseB, Error: Swift.Error>(_ lhs: ResultCallback<ResponseA, Error>,
                                                           _ rhs: ResultCallback<ResponseB, Error>) -> ResultCallback<(ResponseA, ResponseB), Error>  {
-    let startTask: ResultCallback<(ResponseA, ResponseB), Error>.ServiceClosure = { [weak lhs, weak rhs] original in
+    let startTask: ResultCallback<(ResponseA, ResponseB), Error>.ServiceClosure = { original in
         var a: Result<ResponseA, Error>?
         var b: Result<ResponseB, Error>?
 
-        let check = { [weak lhs, weak rhs] in
+        let check = { [weak lhs, weak rhs, weak original] in
             if let a = a, let b = b {
                 switch (a, b) {
                 case (.success(let a), .success(let b)):
                     let result: (ResponseA, ResponseB) = (a, b)
-                    original.complete(result)
+                    original?.complete(result)
                 case (.failure(let a), _),
                      (_, .failure(let a)):
-                    original.complete(a)
+                    original?.complete(a)
                 }
             } else if let a = a {
                 switch a {
                 case .success:
                     break
                 case .failure(let e):
-                    original.complete(e)
+                    original?.complete(e)
                     rhs?.cancel()
                 }
             } else if let b = b {
@@ -339,26 +339,26 @@ public func zip<ResponseA, ResponseB, Error: Swift.Error>(_ lhs: ResultCallback<
                 case .success:
                     break
                 case .failure(let e):
-                    original.complete(e)
+                    original?.complete(e)
                     lhs?.cancel()
                 }
             }
         }
 
-        lhs?.onComplete(options: .selfRetained) { result in
+        lhs.onComplete(options: .weakness) { result in
             a = result
             check()
         }
 
-        rhs?.onComplete(options: .selfRetained) { result in
+        rhs.onComplete(options: .weakness) { result in
             b = result
             check()
         }
     }
 
-    let stopTask: ResultCallback<(ResponseA, ResponseB), Error>.ServiceClosure = { [weak lhs, weak rhs] _ in
-        lhs?.cancel()
-        rhs?.cancel()
+    let stopTask: ResultCallback<(ResponseA, ResponseB), Error>.ServiceClosure = { _ in
+        lhs.cancel()
+        rhs.cancel()
     }
 
     return .init(start: startTask,
