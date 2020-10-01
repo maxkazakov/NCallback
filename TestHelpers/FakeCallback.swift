@@ -26,6 +26,8 @@ public class FakeCallback<ResultType>: Callback<ResultType>, Spryable {
 
         case map = "map(_:)"
         case mapError = "mapError(_:)"
+
+        case polling = "polling(scheduleQueue:responseQueue:retryCount:timeoutInterval:minimumWaitingTime:timeoutFailureCompletion:shouldRepeat:)"
     }
 
     public override func complete(_ result: ResultType) {
@@ -73,22 +75,33 @@ public class FakeCallback<ResultType>: Callback<ResultType>, Spryable {
     }
 
     public override func map<NewResponse, Response, Error: Swift.Error>(_ mapper: @escaping (Response) -> NewResponse) -> ResultCallback<NewResponse, Error>
-        where ResultType == Result<Response, Error> {
-            return spryify(arguments: mapper)
+    where ResultType == Result<Response, Error> {
+        return spryify(arguments: mapper)
     }
 
     public override func mapError<Response, Error: Swift.Error, NewError: Swift.Error>(_ mapper: @escaping (Error) -> NewError) -> ResultCallback<Response, NewError>
-        where ResultType == Result<Response, Error> {
-            return spryify(arguments: mapper)
+    where ResultType == Result<Response, Error> {
+        return spryify(arguments: mapper)
     }
 
     public override static func success<Response, Error>(_ result: @escaping @autoclosure () -> Response) -> ResultCallback<Response, Error>
-        where ResultType == Result<Response, Error> {
-            return spryify(arguments: result())
+    where ResultType == Result<Response, Error> {
+        return spryify(arguments: result())
     }
 
     public override static func failure<Response, Error>(_ result: @escaping @autoclosure () -> Error) -> ResultCallback<Response, Error>
-        where ResultType == Result<Response, Error> {
-            return spryify(arguments: result())
+    where ResultType == Result<Response, Error> {
+        return spryify(arguments: result())
+    }
+
+    public override func polling<Response, Error>(scheduleQueue: CallbackQueue,
+                                                  responseQueue: CallbackQueue,
+                                                  retryCount: Int,
+                                                  timeoutInterval: TimeInterval,
+                                                  minimumWaitingTime: TimeInterval?,
+                                                  timeoutFailureCompletion: ((Error) -> Error)?,
+                                                  shouldRepeat: ((Result<Response, Error>) -> Bool)?) -> Callback<ResultType>
+    where ResultType == Result<Response, Error>, Error: Swift.Error {
+        return spryify(arguments: scheduleQueue, responseQueue, retryCount, timeoutInterval, minimumWaitingTime, timeoutFailureCompletion, shouldRepeat)
     }
 }

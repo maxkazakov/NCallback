@@ -164,7 +164,7 @@ class CallbackSpec: QuickSpec {
 
                         describe("repeatable") {
                             beforeEach {
-                                action(.repeatable, { result = $0 })
+                                action(.repeatable(.weakness), { result = $0 })
                             }
 
                             context("when destructed before completion") {

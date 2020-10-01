@@ -1,11 +1,19 @@
 import Foundation
 
-public enum CallbackOption {
+public enum MemoryOption {
     case selfRetained
     case weakness
-    case repeatable
 
-    public static let `default`: CallbackOption = .selfRetained
+    public static let `default`: MemoryOption = .selfRetained
+}
+
+public enum CallbackOption {
+    case oneOff(MemoryOption)
+    case repeatable(MemoryOption)
+
+    public static let `default`: CallbackOption = .oneOff(.default)
+    public static let weakness: CallbackOption = .oneOff(.weakness)
+    public static let selfRetained: CallbackOption = .oneOff(.selfRetained)
 }
 
 public typealias ResultCallback<Response, Error: Swift.Error> = Callback<Result<Response, Error>>
@@ -20,7 +28,7 @@ public class Callback<ResultType> {
     private var completeCallback: Completion?
     private var deferredCallback: Completion?
     private var strongyfy: Callback?
-    private var options: CallbackOption = .default
+    private var options: MemoryOption = .default
 
     public var hashKey: String?
 
@@ -52,13 +60,7 @@ public class Callback<ResultType> {
         completeCallback?(result)
         deferredCallback?(result)
 
-        switch options {
-        case .weakness,
-             .selfRetained:
-            strongyfy = nil
-        case .repeatable:
-            break
-        }
+        strongyfy = nil
     }
 
     public func cancel() {
@@ -68,19 +70,22 @@ public class Callback<ResultType> {
     }
 
     public func onComplete(options: CallbackOption = .default, _ callback: @escaping Completion) {
-        self.options = options
-
         switch options {
-        case .selfRetained:
-            strongyfy = self
-        case .repeatable,
-             .weakness:
-            break
+        case .oneOff(let option):
+            assert(completeCallback == nil, "was configured twice, please check it!")
+            fallthrough
+        case .repeatable(let option):
+            self.options = option
+
+            switch option {
+            case .selfRetained:
+                strongyfy = self
+            case .weakness:
+                break
+            }
         }
 
-        assert(completeCallback == nil, "was configured twice, please check it!")
         completeCallback = callback
-
         start(self)
     }
 
@@ -134,85 +139,133 @@ public class Callback<ResultType> {
     }
 
     public func map<NewResponse, Response, Error: Swift.Error>(_ mapper: @escaping (Response) -> NewResponse) -> ResultCallback<NewResponse, Error>
-        where ResultType == Result<Response, Error> {
-            return flatMap { return $0.map(mapper) }
+    where ResultType == Result<Response, Error> {
+        return flatMap { return $0.map(mapper) }
     }
 
     public func mapError<Response, Error: Swift.Error, NewError: Swift.Error>(_ mapper: @escaping (Error) -> NewError) -> ResultCallback<Response, NewError>
-        where ResultType == Result<Response, Error> {
-            return flatMap { return $0.mapError(mapper) }
+    where ResultType == Result<Response, Error> {
+        return flatMap { return $0.mapError(mapper) }
     }
 
     public func recover<Response, Error: Swift.Error>(_ mapper: @escaping (Error) -> Response) -> Callback<Response>
-        where ResultType == Result<Response, Error> {
-            return flatMap {
-                switch $0 {
-                case .success(let v):
-                    return v
-                case .failure(let e):
-                    return mapper(e)
-                }
+    where ResultType == Result<Response, Error> {
+        return flatMap {
+            switch $0 {
+            case .success(let v):
+                return v
+            case .failure(let e):
+                return mapper(e)
             }
+        }
     }
 
     public func recover<Response, Error: Swift.Error>(_ recovered: @escaping () -> Response) -> Callback<Response>
-        where ResultType == Result<Response, Error> {
-            return flatMap {
-                switch $0 {
-                case .success(let v):
-                    return v
-                case .failure:
-                    return recovered()
-                }
+    where ResultType == Result<Response, Error> {
+        return flatMap {
+            switch $0 {
+            case .success(let v):
+                return v
+            case .failure:
+                return recovered()
             }
+        }
     }
 
     public func recover<Response, Error: Swift.Error>(_ recovered: @escaping @autoclosure () -> Response) -> Callback<Response>
-        where ResultType == Result<Response, Error> {
-            return flatMap {
-                switch $0 {
-                case .success(let v):
-                    return v
-                case .failure:
-                    return recovered()
-                }
+    where ResultType == Result<Response, Error> {
+        return flatMap {
+            switch $0 {
+            case .success(let v):
+                return v
+            case .failure:
+                return recovered()
             }
+        }
     }
 
     public func recoverNil<Response, Error: Swift.Error>() -> Callback<Response?>
-        where ResultType == Result<Response, Error> {
-            return flatMap {
-                switch $0 {
-                case .success(let v):
-                    return v
-                case .failure:
-                    return nil
-                }
+    where ResultType == Result<Response, Error> {
+        return flatMap {
+            switch $0 {
+            case .success(let v):
+                return v
+            case .failure:
+                return nil
             }
+        }
     }
 
     public func filterNils<Response>() -> Callback<[Response]>
-        where ResultType == [Response?] {
-            return flatMap { result in
-                result.compactMap({ $0 })
-            }
+    where ResultType == [Response?] {
+        return flatMap { result in
+            result.compactMap({ $0 })
+        }
     }
 
     public func filterNils<Response, Error: Swift.Error>() -> ResultCallback<[Response], Error>
-        where ResultType == Result<[Response?], Error> {
-            return map { result in
-                result.compactMap({ $0 })
-            }
+    where ResultType == Result<[Response?], Error> {
+        return map { result in
+            result.compactMap({ $0 })
+        }
     }
 
     public class func success<Response, Error>(_ result: @escaping @autoclosure () -> Response) -> ResultCallback<Response, Error>
-        where ResultType == Result<Response, Error> {
-            return Callback { return .success(result()) }
+    where ResultType == Result<Response, Error> {
+        return Callback { return .success(result()) }
     }
 
     public class func failure<Response, Error>(_ result: @escaping @autoclosure () -> Error) -> ResultCallback<Response, Error>
-        where ResultType == Result<Response, Error> {
-            return Callback { return .failure(result()) }
+    where ResultType == Result<Response, Error> {
+        return Callback { return .failure(result()) }
+    }
+
+    public func polling<Response, Error>(scheduleQueue: CallbackQueue,
+                                         responseQueue: CallbackQueue,
+                                         retryCount: Int = 5,
+                                         timeoutInterval: TimeInterval = 10,
+                                         minimumWaitingTime: TimeInterval? = nil,
+                                         timeoutFailureCompletion: ((Error) -> Error)? = nil,
+                                         shouldRepeat: ((Result<Response, Error>) -> Bool)? = nil) -> Callback
+    where ResultType == Result<Response, Error>, Error: Swift.Error {
+        hiddenPolling(scheduleQueue: scheduleQueue,
+                      responseQueue: responseQueue,
+                      retryCount: retryCount,
+                      timeoutInterval: timeoutInterval,
+                      minimumWaitingTime: minimumWaitingTime,
+                      timeoutFailureCompletion: timeoutFailureCompletion,
+                      shouldRepeat: shouldRepeat)
+    }
+
+    public func polling<Response, Error>(responseQueue: CallbackQueue,
+                                         retryCount: Int = 5,
+                                         timeoutInterval: TimeInterval = 10,
+                                         minimumWaitingTime: TimeInterval? = nil,
+                                         timeoutFailureCompletion: ((Error) -> Error)? = nil,
+                                         shouldRepeat: ((Result<Response, Error>) -> Bool)? = nil) -> Callback
+    where ResultType == Result<Response, Error>, Error: Swift.Error {
+        polling(scheduleQueue: DispatchQueue.global(),
+                responseQueue: responseQueue,
+                retryCount: retryCount,
+                timeoutInterval: timeoutInterval,
+                minimumWaitingTime: minimumWaitingTime,
+                timeoutFailureCompletion: timeoutFailureCompletion,
+                shouldRepeat: shouldRepeat)
+    }
+
+    public func polling<Response, Error>(retryCount: Int = 5,
+                                         timeoutInterval: TimeInterval = 10,
+                                         minimumWaitingTime: TimeInterval? = nil,
+                                         timeoutFailureCompletion: ((Error) -> Error)? = nil,
+                                         shouldRepeat: ((Result<Response, Error>) -> Bool)? = nil) -> Callback
+    where ResultType == Result<Response, Error>, Error: Swift.Error {
+        polling(scheduleQueue: DispatchQueue.global(),
+                responseQueue: DispatchQueue.main,
+                retryCount: retryCount,
+                timeoutInterval: timeoutInterval,
+                minimumWaitingTime: minimumWaitingTime,
+                timeoutFailureCompletion: timeoutFailureCompletion,
+                shouldRepeat: shouldRepeat)
     }
 }
 
