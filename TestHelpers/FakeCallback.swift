@@ -66,11 +66,13 @@ public class FakeCallback<ResultType>: Callback<ResultType>, Spryable {
         return spryify(arguments: callback)
     }
 
-    public override func complete<Response, Error: Swift.Error>(_ response: Response) where ResultType == Result<Response, Error> {
+    public override func complete<Response, Error: Swift.Error>(_ response: Response)
+    where ResultType == Result<Response, Error> {
         return spryify(arguments: response)
     }
 
-    public override func complete<Response, Error: Swift.Error>(_ error: Error) where ResultType == Result<Response, Error> {
+    public override func complete<Response, Error: Swift.Error>(_ error: Error)
+    where ResultType == Result<Response, Error> {
         return spryify(arguments: error)
     }
 
