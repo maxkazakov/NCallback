@@ -5,44 +5,27 @@ public typealias PendingResultCallback<Response, Error: Swift.Error> = PendingCa
 public class PendingCallback<ResultType> {
     public typealias Callback = NCallback.Callback<ResultType>
     public typealias ServiceClosure = Callback.ServiceClosure
-    public typealias ServiceGenerator = (@escaping ServiceClosure) -> Callback
-    public typealias Generator = () -> Callback
 
-    private let generator: ServiceGenerator
     private var cached: Callback?
 
     public var isPending: Bool {
         cached != nil
     }
 
-    public convenience init(generator: @escaping Generator) {
-        self.init(generator: { _ in generator() } )
-    }
-
-    public convenience init(generator: @escaping @autoclosure Generator) {
-        self.init(generator: { _ in generator() } )
-    }
-
-    public required init(generator: @escaping ServiceGenerator) {
-        self.generator = generator
-    }
-
-    public convenience init() {
-        self.init(generator: { .init(start: $0) } )
+    public init() {
     }
 
     public func current(_ closure: @escaping ServiceClosure = { _ in }) -> Callback {
         let result: Callback
         if let current = cached {
-            result = .init()
-
-            _ = current.deferred { [result] in
-                result.complete($0)
-            }
+            result = .init(start: {
+                current.deferred($0.complete)
+            })
         } else {
-            let generated = generator(closure)
-            cached = generated
-            result = generated.deferred { [weak self] _ in
+            result = .init(start: closure)
+            cached = result
+
+            result.deferred { [weak self] _ in
                 self?.cached = nil
             }
         }
