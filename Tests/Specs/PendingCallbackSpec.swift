@@ -126,33 +126,6 @@ class PendingCallbackSpec: QuickSpec {
                 }
             }
 
-            describe("generator") {
-                beforeEach {
-                    subject = .init(generator: { return callback })
-                }
-
-                itBehavesLike(Constant.sharedInitialState)
-                itBehavesLike(Constant.sharedBehavior)
-            }
-
-            describe("autoclosure generator") {
-                beforeEach {
-                    subject = .init(generator: callback)
-                }
-
-                itBehavesLike(Constant.sharedInitialState)
-                itBehavesLike(Constant.sharedBehavior)
-            }
-
-            describe("autoclosure generator") {
-                beforeEach {
-                    subject = .init(generator: { _ in callback })
-                }
-
-                itBehavesLike(Constant.sharedInitialState)
-                itBehavesLike(Constant.sharedBehavior)
-            }
-
             describe("empty init") {
                 beforeEach {
                     subject = .init()
