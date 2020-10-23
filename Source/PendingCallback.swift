@@ -25,7 +25,7 @@ public class PendingCallback<ResultType> {
             result = .init(start: closure)
             cached = result
 
-            result.deferred { [weak self] _ in
+            result.beforeComplete { [weak self] _ in
                 self?.cached = nil
             }
         }
