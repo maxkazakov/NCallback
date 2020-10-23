@@ -3,8 +3,8 @@ Pod::Spec.new do |spec|
     spec.version      = "1.0.0"
     spec.summary      = "NCallback - wrapped closures"
 
-    spec.source       = { :git => "git@bitbucket.org:tech4star/NCallback.git" }
-    spec.homepage     = "https://bitbucket.org/tech4star/NCallback.git"
+    spec.source       = { :git => "git@github.com:NikSativa/NCallback.git" }
+    spec.homepage     = "https://github.com/NikSativa/NCallback"
 
     spec.license          = 'MIT'
     spec.author           = { "Nikita Konopelko" => "nik.sativa@gmail.com" }
