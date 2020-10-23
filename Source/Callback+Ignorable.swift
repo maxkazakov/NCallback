@@ -15,8 +15,7 @@ public extension Callback {
         return flatMap(Ignorable.init)
     }
 
-    func mapIgnorable<T, Error: Swift.Error>() -> ResultCallback<Ignorable, Error>
-    where ResultType == Result<T, Error> {
+    func mapIgnorable<T, Error: Swift.Error>() -> ResultCallback<Ignorable, Error> where ResultType == Result<T, Error> {
         map(Ignorable.init)
     }
 
