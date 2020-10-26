@@ -28,7 +28,7 @@ public class Callback<ResultType> {
     private var completeCallback: Completion?
     private var deferredCallback: Completion?
     private var strongyfy: Callback?
-    private var options: MemoryOption = .default
+    private var options: CallbackOption = .default
 
     public var hashKey: String?
 
@@ -60,6 +60,13 @@ public class Callback<ResultType> {
         completeCallback?(result)
         deferredCallback?(result)
 
+        switch options {
+        case .oneOff:
+            completeCallback = nil
+        case .repeatable:
+            break
+        }
+
         strongyfy = nil
     }
 
@@ -70,13 +77,13 @@ public class Callback<ResultType> {
     }
 
     public func onComplete(options: CallbackOption = .default, _ callback: @escaping Completion) {
+        self.options = options
+
         switch options {
         case .oneOff(let option):
             assert(completeCallback == nil, "was configured twice, please check it!")
             fallthrough
         case .repeatable(let option):
-            self.options = option
-
             switch option {
             case .selfRetained:
                 strongyfy = self

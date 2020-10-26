@@ -340,8 +340,8 @@ class CallbackSpec: QuickSpec {
                             subject.onComplete({ _ in })
                         }
 
-                        it("should throw assert") {
-                            expect { subject.onComplete({ _ in }) }.to(throwAssertion())
+                        it("should not throw assert; should clear completion callback after synced completions") {
+                            expect(expression: { subject.onComplete({ _ in }) }).toNot(throwAssertion())
                         }
                     }
 
@@ -358,8 +358,8 @@ class CallbackSpec: QuickSpec {
                             subject.onComplete({ _ in })
                         }
 
-                        it("should throw assert") {
-                            expect { subject.onComplete({ _ in }) }.to(throwAssertion())
+                        it("should not throw assert; should clear completion callback after synced completions") {
+                            expect(expression: { subject.onComplete({ _ in }) }).toNot(throwAssertion())
                         }
                     }
 
@@ -1151,9 +1151,9 @@ class CallbackSpec: QuickSpec {
                                             expect(wrapper2.weakValue).to(beNil())
                                         }
                                     }
-
-                                    itBehavesLikeFirstWithError(false)
                                 }
+                                
+                                itBehavesLikeFirstWithError(false)
                             }
 
                             itBehavesLikeFirstWithError(true)
