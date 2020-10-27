@@ -96,6 +96,12 @@ public class Callback<ResultType> {
         start(self)
     }
 
+    public func waitCompletion(of callback: Callback) {
+        callback.onComplete(options: .oneOff(.selfRetained)) { [weak self] in
+            self?.complete($0)
+        }
+    }
+
     public func oneWay(options: CallbackOption = .default) {
         onComplete(options: options, { _ in })
     }
@@ -128,7 +134,7 @@ public class Callback<ResultType> {
     @discardableResult
     public func beforeComplete(_ callback: @escaping Completion) -> Callback<ResultType> {
         let originalCallback = beforeCallback
-        self.beforeCallback = { result in
+        beforeCallback = { result in
             originalCallback?(result)
             callback(result)
         }
