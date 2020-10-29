@@ -96,6 +96,12 @@ public class Callback<ResultType> {
         start(self)
     }
 
+    public func onComplete(options: CallbackOption = .default, _ callback: @escaping () -> Void) where ResultType == Ignorable {
+        onComplete(options: options) { _ in
+            callback()
+        }
+    }
+
     public func waitCompletion(of callback: Callback) {
         callback.onComplete(options: .oneOff(.selfRetained)) { [weak self] in
             self?.complete($0)
@@ -342,6 +348,10 @@ private enum State<R> {
 }
 
 public func zip<Response>(_ input: [Callback<Response>]) -> Callback<[Response]> {
+    if input.isEmpty {
+        return .init(result: [])
+    }
+
     var array = input
     var result: [State<Response>] = Array(repeating: .pending, count: array.count)
     let startTask: Callback<[Response]>.ServiceClosure = { original in
