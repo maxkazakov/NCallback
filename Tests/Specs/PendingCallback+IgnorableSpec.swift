@@ -28,7 +28,7 @@ class PendingCallback_IgnorableSpec: QuickSpec {
                         subject = .init()
 
                         for _ in 0..<5 {
-                            subject.current().onComplete {
+                            subject.current({ _ in }).onComplete {
                                 result.append($0)
                             }
                         }
@@ -53,7 +53,7 @@ class PendingCallback_IgnorableSpec: QuickSpec {
                         subject = .init()
 
                         for _ in 0..<5 {
-                            subject.current().onComplete {
+                            subject.current({ _ in }).onComplete {
                                 result.append($0)
                             }
                         }
@@ -76,7 +76,7 @@ class PendingCallback_IgnorableSpec: QuickSpec {
                         subject = .init()
 
                         for _ in 0..<5 {
-                            subject.current().onComplete {
+                            subject.current({ _ in }).onComplete {
                                 result.append($0)
                             }
                         }
@@ -99,7 +99,7 @@ class PendingCallback_IgnorableSpec: QuickSpec {
                         subject = .init()
 
                         for _ in 0..<5 {
-                            subject.current().onComplete {
+                            subject.current({ _ in }).onComplete {
                                 result.append($0)
                             }
                         }

@@ -56,7 +56,7 @@ class PendingCallbackSpec: QuickSpec {
                     beforeEach {
                         deferred = .init()
                         callback.stub(.deferred).andReturn(deferred)
-                        actual = subject.current()
+                        actual = subject.current { _ in }
                     }
 
                     it("should generate new instance") {
@@ -108,7 +108,7 @@ class PendingCallbackSpec: QuickSpec {
                                 closure = args[0] as? Callback<Int>.Completion
                                 return deferred
                             }
-                            actual2 = subject.current()
+                            actual2 = subject.current { _ in }
                             actual2.onComplete({ result = $0 })
                             closure?(2)
                         }
@@ -137,7 +137,7 @@ class PendingCallbackSpec: QuickSpec {
                     var actual: Callback<Int>!
 
                     beforeEach {
-                        actual = subject.current()
+                        actual = subject.current { _ in }
                     }
 
                     it("should generate new instance") {

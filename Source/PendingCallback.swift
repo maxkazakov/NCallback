@@ -19,20 +19,14 @@ public class PendingCallback<ResultType> {
     public init() {
     }
 
-    public func current(_ closure: @escaping @autoclosure () -> Callback) -> Callback {
-        current {
-            $0.waitCompletion(of: closure())
-        }
-    }
-
-    public func current(_ closure: @escaping ServiceClosure) -> Callback {
+    public func current(_ closure: @autoclosure () -> Callback) -> Callback {
         let result: Callback
+
         if let current = cached {
-            result = .init(start: {
-                current.deferred($0.complete)
-            })
+            result = .init()
+            current.deferred(result.complete)
         } else {
-            result = .init(start: closure)
+            result = closure()
             cached = result
 
             result.beforeComplete { [weak self] in
@@ -41,12 +35,15 @@ public class PendingCallback<ResultType> {
             }
 
             result.deferred { [weak self] in
-                self?.cached = nil
                 self?.deferredCallback?($0)
             }
         }
 
         return result
+    }
+
+    public func current(_ closure: @escaping ServiceClosure) -> Callback {
+        current(.init(start: closure))
     }
 
     public func complete(_ result: ResultType) {
