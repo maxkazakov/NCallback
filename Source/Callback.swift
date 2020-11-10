@@ -56,24 +56,27 @@ public class Callback<ResultType> {
 
     // MARK: - completion
     public func complete(_ result: ResultType) {
+        let completeCallback = self.completeCallback
+        self.completeCallback = nil
+
         beforeCallback?(result)
         completeCallback?(result)
         deferredCallback?(result)
 
         switch options {
         case .oneOff:
-            completeCallback = nil
-        case .repeatable:
             break
+        case .repeatable:
+            self.completeCallback = completeCallback
         }
 
         strongyfy = nil
     }
 
     public func cancel() {
-        stop(self)
         completeCallback = nil
         strongyfy = nil
+        stop(self)
     }
 
     public func onComplete(options: CallbackOption = .default, _ callback: @escaping Completion) {
