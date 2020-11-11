@@ -29,6 +29,7 @@ public class Callback<ResultType> {
     private var deferredCallback: Completion?
     private var strongyfy: Callback?
     private var options: CallbackOption = .default
+    private var lock: UnfairLock = .init()
 
     public var hashKey: String?
 
@@ -56,8 +57,9 @@ public class Callback<ResultType> {
 
     // MARK: - completion
     public func complete(_ result: ResultType) {
-        let completeCallback = self.completeCallback
-        self.completeCallback = nil
+        if !lock.tryLock() {
+            return
+        }
 
         beforeCallback?(result)
         completeCallback?(result)
@@ -65,18 +67,26 @@ public class Callback<ResultType> {
 
         switch options {
         case .oneOff:
-            break
+            completeCallback = nil
         case .repeatable:
-            self.completeCallback = completeCallback
+            break
         }
 
         strongyfy = nil
+
+        lock.unlock()
     }
 
     public func cancel() {
+        if !lock.tryLock() {
+            return
+        }
+
         completeCallback = nil
         strongyfy = nil
         stop(self)
+
+        lock.unlock()
     }
 
     public func onComplete(options: CallbackOption = .default, _ callback: @escaping Completion) {
@@ -442,4 +452,17 @@ public func zip<ResponseA, ResponseB, Error: Swift.Error>(_ lhs: ResultCallback<
 
     return .init(start: startTask,
                  stop: stopTask)
+}
+
+final
+private class UnfairLock {
+    private var unfairLock = os_unfair_lock_s()
+
+    func tryLock() -> Bool {
+        os_unfair_lock_trylock(&unfairLock)
+    }
+
+    func unlock() {
+        os_unfair_lock_unlock(&unfairLock)
+    }
 }
