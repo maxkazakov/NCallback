@@ -4,17 +4,13 @@ extension Callback {
     private func startPolling<Response, Error>(with info: PollingInfo<Response, Error>, retryCount: Int)
     where ResultType == Result<Response, Error>, Error: Swift.Error {
         onComplete(options: .repeatable(.selfRetained)) { result in
-            switch result {
-            case .success:
-                if info.canRepeat(retryCount) && info.shouldRepeat(result) {
-                    self.schedulePolling(with: info, retryCount: retryCount - 1)
-                } else {
+            if info.canRepeat(retryCount) && info.shouldRepeat(result) {
+                self.schedulePolling(with: info, retryCount: retryCount - 1)
+            } else {
+                switch result {
+                case .success:
                     info.complete(result)
-                }
-            case .failure(let error):
-                if info.canRepeat(retryCount) {
-                    self.schedulePolling(with: info, retryCount: retryCount - 1)
-                } else {
+                case .failure(let error):
                     if let failureCompletion = info.failureCompletion {
                         info.complete(.failure(failureCompletion(error)))
                     } else {
