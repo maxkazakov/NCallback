@@ -30,7 +30,7 @@ extension Callback {
 
     // was marked internal to implement logic in the separated file
     // swift can't override methods from extensions, but it's neede for Fake
-    internal func hiddenPolling<Response, Error>(scheduleQueue: CallbackQueue,
+    internal func hiddenPolling<Response, Error>(scheduleQueue: DispatchCallbackQueue,
                                                  responseQueue: CallbackQueue,
                                                  retryCount: Int,
                                                  timeoutInterval: TimeInterval,
@@ -57,7 +57,7 @@ private struct PollingInfo<Response, Error: Swift.Error> {
     private let actual: ResultCallback<Response, Error>
     private let responseQueue: CallbackQueue
 
-    let scheduleQueue: CallbackQueue
+    let scheduleQueue: DispatchCallbackQueue
 
     let timeoutInterval: TimeInterval
     let failureCompletion: ((Error) -> Error)?
@@ -66,7 +66,7 @@ private struct PollingInfo<Response, Error: Swift.Error> {
     let timestamp: TimeInterval
     let minimumWaitingTime: TimeInterval?
 
-    internal init(scheduleQueue: CallbackQueue,
+    internal init(scheduleQueue: DispatchCallbackQueue,
                   responseQueue: CallbackQueue,
                   actual: ResultCallback<Response, Error>,
                   timeoutInterval: TimeInterval,
@@ -84,7 +84,7 @@ private struct PollingInfo<Response, Error: Swift.Error> {
     }
 
     func complete(_ result: Result<Response, Error>) {
-        responseQueue.async { [actual] in
+        responseQueue.fire { [actual] in
             actual.complete(result)
         }
     }

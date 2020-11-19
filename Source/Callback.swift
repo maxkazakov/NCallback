@@ -30,6 +30,7 @@ public class Callback<ResultType> {
     private var strongyfy: Callback?
     private var options: CallbackOption = .default
     private var lock: UnfairLock = .init()
+    private var queue: CallbackQueue = .absent
 
     public var hashKey: String?
 
@@ -61,11 +62,13 @@ public class Callback<ResultType> {
             return
         }
 
-        beforeCallback?(result)
-        completeCallback?(result)
-        deferredCallback?(result)
+        queue.fire {
+            self.beforeCallback?(result)
+            self.completeCallback?(result)
+            self.deferredCallback?(result)
+        }
 
-        switch options {
+        switch self.options {
         case .oneOff:
             completeCallback = nil
         case .repeatable:
@@ -123,6 +126,15 @@ public class Callback<ResultType> {
 
     public func oneWay(options: CallbackOption = .default) {
         onComplete(options: options, { _ in })
+    }
+
+    // MARK: - queueing
+    public func schedule(in queue: DispatchCallbackQueue) {
+        self.queue = .async(queue)
+    }
+
+    public func schedule(in queue: CallbackQueue) {
+        self.queue = queue
     }
 
     // MARK: - mapping
@@ -252,7 +264,7 @@ public class Callback<ResultType> {
         return Callback { return .failure(result()) }
     }
 
-    public func polling<Response, Error>(scheduleQueue: CallbackQueue,
+    public func polling<Response, Error>(scheduleQueue: DispatchCallbackQueue,
                                          responseQueue: CallbackQueue,
                                          retryCount: Int = 5,
                                          timeoutInterval: TimeInterval = 10,
@@ -292,7 +304,7 @@ public class Callback<ResultType> {
                                          shouldRepeat: ((Result<Response, Error>) -> Bool)? = nil) -> Callback
     where ResultType == Result<Response, Error>, Error: Swift.Error {
         polling(scheduleQueue: DispatchQueue.global(),
-                responseQueue: DispatchQueue.main,
+                responseQueue: .default,
                 retryCount: retryCount,
                 timeoutInterval: timeoutInterval,
                 minimumWaitingTime: minimumWaitingTime,
