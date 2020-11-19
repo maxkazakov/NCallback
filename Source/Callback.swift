@@ -58,26 +58,26 @@ public class Callback<ResultType> {
 
     // MARK: - completion
     public func complete(_ result: ResultType) {
-        if !lock.tryLock() {
-            return
-        }
-
         queue.fire {
+            if !self.lock.tryLock() {
+                return
+            }
+
             self.beforeCallback?(result)
             self.completeCallback?(result)
             self.deferredCallback?(result)
+
+            switch self.options {
+            case .oneOff:
+                self.completeCallback = nil
+            case .repeatable:
+                break
+            }
+
+            self.strongyfy = nil
+
+            self.lock.unlock()
         }
-
-        switch self.options {
-        case .oneOff:
-            completeCallback = nil
-        case .repeatable:
-            break
-        }
-
-        strongyfy = nil
-
-        lock.unlock()
     }
 
     public func cancel() {
