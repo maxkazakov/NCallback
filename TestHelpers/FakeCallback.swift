@@ -27,7 +27,6 @@ public class FakeCallback<ResultType>: Callback<ResultType>, Spryable {
         case map = "map(_:)"
         case mapError = "mapError(_:)"
 
-        case polling = "polling(scheduleQueue:responseQueue:retryCount:timeoutInterval:minimumWaitingTime:timeoutFailureCompletion:shouldRepeat:)"
         case scheduleInQueue = "schedule(in:)"
     }
 
@@ -95,17 +94,6 @@ public class FakeCallback<ResultType>: Callback<ResultType>, Spryable {
     public override static func failure<Response, Error>(_ result: @escaping @autoclosure () -> Error) -> ResultCallback<Response, Error>
     where ResultType == Result<Response, Error> {
         return spryify(arguments: result())
-    }
-
-    public override func polling<Response, Error>(scheduleQueue: DispatchCallbackQueue,
-                                                  responseQueue: CallbackQueue,
-                                                  retryCount: Int,
-                                                  timeoutInterval: TimeInterval,
-                                                  minimumWaitingTime: TimeInterval?,
-                                                  timeoutFailureCompletion: ((Error) -> Error)?,
-                                                  shouldRepeat: ((Result<Response, Error>) -> Bool)?) -> Callback<ResultType>
-    where ResultType == Result<Response, Error>, Error: Swift.Error {
-        return spryify(arguments: scheduleQueue, responseQueue, retryCount, timeoutInterval, minimumWaitingTime, timeoutFailureCompletion, shouldRepeat)
     }
 
     public override func schedule(in queue: CallbackQueue) {

@@ -56,6 +56,11 @@ public class Callback<ResultType> {
         stop(self)
     }
 
+    public func set(hashKey: String?) -> Callback {
+        self.hashKey = hashKey
+        return self
+    }
+
     // MARK: - completion
     public func complete(_ result: ResultType) {
         queue.fire {
@@ -63,9 +68,9 @@ public class Callback<ResultType> {
                 return
             }
 
-            self.beforeCallback?(result)
-            self.completeCallback?(result)
-            self.deferredCallback?(result)
+            let beforeCallback = self.beforeCallback
+            let completeCallback = self.completeCallback
+            let deferredCallback = self.deferredCallback
 
             switch self.options {
             case .oneOff:
@@ -77,6 +82,10 @@ public class Callback<ResultType> {
             self.strongyfy = nil
 
             self.lock.unlock()
+
+            beforeCallback?(result)
+            completeCallback?(result)
+            deferredCallback?(result)
         }
     }
 
@@ -142,11 +151,16 @@ public class Callback<ResultType> {
         let copy = Callback<NewResultType>(start: { _ in self.start(self) },
                                            stop: { _ in self.stop(self) })
         copy.hashKey = hashKey
+
         let originalCallback = completeCallback
         completeCallback = { [weak copy] result in
             originalCallback?(result)
             copy?.complete(mapper(result))
         }
+
+        options = .repeatable(.weakness)
+        strongyfy = nil
+
         return copy
     }
 
@@ -265,31 +279,29 @@ public class Callback<ResultType> {
     }
 
     public func polling<Response, Error>(scheduleQueue: DispatchCallbackQueue,
-                                         responseQueue: CallbackQueue,
                                          retryCount: Int = 5,
                                          timeoutInterval: TimeInterval = 10,
                                          minimumWaitingTime: TimeInterval? = nil,
-                                         timeoutFailureCompletion: ((Error) -> Error)? = nil,
-                                         shouldRepeat: ((Result<Response, Error>) -> Bool)? = nil) -> Callback
+                                         timeoutFailureCompletion: @escaping (Error) -> Error = { $0 },
+                                         shouldRepeat: @escaping (Result<Response, Error>) -> Bool = { _ in false }) -> Callback
     where ResultType == Result<Response, Error>, Error: Swift.Error {
-        hiddenPolling(scheduleQueue: scheduleQueue,
-                      responseQueue: responseQueue,
-                      retryCount: retryCount,
-                      timeoutInterval: timeoutInterval,
-                      minimumWaitingTime: minimumWaitingTime,
-                      timeoutFailureCompletion: timeoutFailureCompletion,
-                      shouldRepeat: shouldRepeat)
+        return PollingCallback(scheduleQueue: scheduleQueue,
+                               generator: self,
+                               timeoutInterval: timeoutInterval,
+                               timeoutFailureCompletion: timeoutFailureCompletion,
+                               shouldRepeat: shouldRepeat,
+                               retryCount: retryCount,
+                               minimumWaitingTime: minimumWaitingTime).start()
     }
 
     public func polling<Response, Error>(responseQueue: CallbackQueue,
                                          retryCount: Int = 5,
                                          timeoutInterval: TimeInterval = 10,
                                          minimumWaitingTime: TimeInterval? = nil,
-                                         timeoutFailureCompletion: ((Error) -> Error)? = nil,
-                                         shouldRepeat: ((Result<Response, Error>) -> Bool)? = nil) -> Callback
+                                         timeoutFailureCompletion: @escaping (Error) -> Error = { $0 },
+                                         shouldRepeat: @escaping (Result<Response, Error>) -> Bool = { _ in false }) -> Callback
     where ResultType == Result<Response, Error>, Error: Swift.Error {
         polling(scheduleQueue: DispatchQueue.global(),
-                responseQueue: responseQueue,
                 retryCount: retryCount,
                 timeoutInterval: timeoutInterval,
                 minimumWaitingTime: minimumWaitingTime,
@@ -300,11 +312,10 @@ public class Callback<ResultType> {
     public func polling<Response, Error>(retryCount: Int = 5,
                                          timeoutInterval: TimeInterval = 10,
                                          minimumWaitingTime: TimeInterval? = nil,
-                                         timeoutFailureCompletion: ((Error) -> Error)? = nil,
-                                         shouldRepeat: ((Result<Response, Error>) -> Bool)? = nil) -> Callback
+                                         timeoutFailureCompletion: @escaping (Error) -> Error = { $0 },
+                                         shouldRepeat: @escaping (Result<Response, Error>) -> Bool = { _ in false }) -> Callback
     where ResultType == Result<Response, Error>, Error: Swift.Error {
         polling(scheduleQueue: DispatchQueue.global(),
-                responseQueue: .default,
                 retryCount: retryCount,
                 timeoutInterval: timeoutInterval,
                 minimumWaitingTime: minimumWaitingTime,
