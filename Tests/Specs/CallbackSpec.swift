@@ -323,7 +323,7 @@ class CallbackSpec: QuickSpec {
                         }
 
                         it("should throw assert") {
-                            expect { subject.onComplete({ _ in }) }.to(throwAssertion())
+                            expect(expression: { subject.onComplete({ _ in }) }).to(throwAssertion())
                         }
                     }
 
@@ -393,7 +393,7 @@ class CallbackSpec: QuickSpec {
                         }
 
                         it("should throw assert") {
-                            expect { subject.onComplete({ _ in }) }.to(throwAssertion())
+                            expect(expression: { subject.onComplete({ _ in }) }).to(throwAssertion())
                         }
 
                         context("when canceled") {
@@ -873,11 +873,11 @@ class CallbackSpec: QuickSpec {
                         }
 
                         it("should be receive original result") {
-                            expect(originalResult).to(equal(.success([1, 2, 3])))
+                            expect(originalResult) == .success([1, 2, 3])
                         }
 
                         it("should be receive mapped result") {
-                            expect(result).to(equal(.success([1, 2, 3])))
+                            expect(result) == .success([1, 2, 3])
                         }
                     }
 
@@ -895,11 +895,11 @@ class CallbackSpec: QuickSpec {
                         }
 
                         it("should be receive original result") {
-                            expect(originalResult).to(equal(.success([1, nil, 2, nil, 3])))
+                            expect(originalResult) == .success([1, nil, 2, nil, 3])
                         }
 
                         it("should be receive mapped result") {
-                            expect(result).to(equal(.success([1, 2, 3])))
+                            expect(result) == .success([1, 2, 3])
                         }
                     }
                 }

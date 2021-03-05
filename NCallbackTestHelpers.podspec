@@ -32,6 +32,8 @@ Pod::Spec.new do |spec|
         tests.dependency 'Quick'
         tests.dependency 'Spry+Nimble'
 
+        tests.frameworks = 'XCTest', 'Foundation'
+
         tests.source_files = 'Tests/Specs/**/*.swift'
     end
 end

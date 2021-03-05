@@ -78,7 +78,7 @@ class Callback_IgnorableSpec: QuickSpec {
                     }
 
                     it("should receive result") {
-                        expect(result).to(equal(.success(.testMake())))
+                        expect(result) == .success(.testMake())
                     }
                 }
 
@@ -106,8 +106,8 @@ class Callback_IgnorableSpec: QuickSpec {
                         }
 
                         it("should receive result") {
-                            expect(result).to(equal(.success(1)))
-                            expect(mappedResult).to(equal(.success(.testMake())))
+                            expect(result) == .success(1)
+                            expect(mappedResult) == .success(.testMake())
                         }
                     }
 
@@ -117,8 +117,8 @@ class Callback_IgnorableSpec: QuickSpec {
                         }
 
                         it("should receive result") {
-                            expect(result).to(equal(.failure(.case1)))
-                            expect(mappedResult).to(equal(.failure(.case1)))
+                            expect(result) == .failure(.case1)
+                            expect(mappedResult) == .failure(.case1)
                         }
                     }
                 }

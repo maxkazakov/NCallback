@@ -13,9 +13,9 @@ let package = Package(
         .library(name: "NCallbackTestHelpers", targets: ["NCallbackTestHelpers"])
     ],
     dependencies: [
-        .package(url: "https://github.com/NikSativa/Spry.git", .upToNextMajor(from: "3.0.0")),
-        .package(url: "https://github.com/Quick/Quick.git", .upToNextMajor(from: "3.0.0")),
-        .package(url: "https://github.com/Quick/Nimble.git", .upToNextMajor(from: "8.0.1"))
+        .package(url: "https://github.com/NikSativa/Spry.git", .upToNextMajor(from: "3.3.0")),
+        .package(url: "https://github.com/Quick/Quick.git", .upToNextMajor(from: "3.1.2")),
+        .package(url: "https://github.com/Quick/Nimble.git", .upToNextMajor(from: "8.0.0"))
     ],
     targets: [
         .target(name: "NCallback",
