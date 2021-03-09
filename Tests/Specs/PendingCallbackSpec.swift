@@ -120,7 +120,7 @@ class PendingCallbackSpec: QuickSpec {
                         }
 
                         it("should receive result") {
-                            expect(result).to(equal(2))
+                            expect(result) == 2
                         }
                     }
                 }
@@ -167,7 +167,7 @@ class PendingCallbackSpec: QuickSpec {
                         }
 
                         it("should receive result") {
-                            expect(result).to(equal(1))
+                            expect(result) == 1
                         }
 
                         it("should be clear") {

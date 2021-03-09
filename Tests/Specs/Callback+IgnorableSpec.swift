@@ -57,7 +57,7 @@ class Callback_IgnorableSpec: QuickSpec {
                     }
 
                     it("should receive result") {
-                        expect(result).to(equal(1))
+                        expect(result) == 1
                         expect(mappedResult).toNot(beNil())
                     }
                 }

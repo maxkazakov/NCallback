@@ -103,7 +103,7 @@ class CallbackSpec: QuickSpec {
                                 }
 
                                 it("should receive result") {
-                                    expect(result).to(equal(1))
+                                    expect(result) == 1
                                 }
 
                                 it("should call stop on deinit") {
@@ -137,7 +137,7 @@ class CallbackSpec: QuickSpec {
                                     }
 
                                     it("should receive result") {
-                                        expect(result).to(equal(2))
+                                        expect(result) == 2
                                     }
 
                                     it("should call stop on deinit") {
@@ -153,7 +153,7 @@ class CallbackSpec: QuickSpec {
                                 }
 
                                 it("should receive result") {
-                                    expect(result).to(equal(1))
+                                    expect(result) == 1
                                 }
 
                                 it("should call stop on deinit") {
@@ -190,7 +190,7 @@ class CallbackSpec: QuickSpec {
                                 }
 
                                 it("should receive result") {
-                                    expect(result).to(equal(1))
+                                    expect(result) == 1
                                 }
 
                                 it("should not call stop") {
@@ -204,7 +204,7 @@ class CallbackSpec: QuickSpec {
                                     }
 
                                     it("should receive result") {
-                                        expect(result).to(equal(2))
+                                        expect(result) == 2
                                     }
 
                                     it("should not call stop") {
@@ -254,7 +254,7 @@ class CallbackSpec: QuickSpec {
 
                         it("should resolve events in correct order") {
                             let expected: [Events] = [.beforeComplete, .onComplete, .deferred]
-                            expect(events).to(equal(expected))
+                            expect(events) == expected
                         }
                     }
 
@@ -277,7 +277,7 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should be receive original result") {
-                                expect(originalResult).to(equal(1))
+                                expect(originalResult) == 1
                             }
 
                             it("should be receive mapped result") {
@@ -299,7 +299,7 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should be receive original result") {
-                                expect(originalResult).to(equal(1))
+                                expect(originalResult) == 1
                             }
 
                             it("should be receive mapped result") {
@@ -323,7 +323,7 @@ class CallbackSpec: QuickSpec {
                         }
 
                         it("should throw assert") {
-                            expect(expression: { subject.onComplete({ _ in }) }).to(throwAssertion())
+                            expect({ subject.onComplete({ _ in }) }).to(throwAssertion())
                         }
                     }
 
@@ -341,7 +341,7 @@ class CallbackSpec: QuickSpec {
                         }
 
                         it("should not throw assert; should clear completion callback after synced completions") {
-                            expect(expression: { subject.onComplete({ _ in }) }).toNot(throwAssertion())
+                            expect({ subject.onComplete({ _ in }) }).toNot(throwAssertion())
                         }
                     }
 
@@ -359,7 +359,7 @@ class CallbackSpec: QuickSpec {
                         }
 
                         it("should not throw assert; should clear completion callback after synced completions") {
-                            expect(expression: { subject.onComplete({ _ in }) }).toNot(throwAssertion())
+                            expect({ subject.onComplete({ _ in }) }).toNot(throwAssertion())
                         }
                     }
 
@@ -393,7 +393,7 @@ class CallbackSpec: QuickSpec {
                         }
 
                         it("should throw assert") {
-                            expect(expression: { subject.onComplete({ _ in }) }).to(throwAssertion())
+                            expect({ subject.onComplete({ _ in }) }).to(throwAssertion())
                         }
 
                         context("when canceled") {
@@ -450,11 +450,11 @@ class CallbackSpec: QuickSpec {
                         }
 
                         it("should not equal") {
-                            expect(subject).toNot(equal(subject2))
+                            expect(subject) != subject2
                         }
 
                         it("should generate different hashes") {
-                            expect(subject.hashValue).toNot(equal(subject2.hashValue))
+                            expect(subject.hashValue) != subject2.hashValue
                         }
                     }
 
@@ -465,11 +465,11 @@ class CallbackSpec: QuickSpec {
                         }
 
                         it("should be equal") {
-                            expect(subject).to(equal(subject2))
+                            expect(subject) == subject2
                         }
 
                         it("should generate same hashes") {
-                            expect(subject.hashValue).to(equal(subject2.hashValue))
+                            expect(subject.hashValue) == subject2.hashValue
                         }
                     }
 
@@ -480,11 +480,11 @@ class CallbackSpec: QuickSpec {
                         }
 
                         it("should not equal") {
-                            expect(subject).toNot(equal(subject2))
+                            expect(subject) != subject2
                         }
 
                         it("should generate different hashes") {
-                            expect(subject.hashValue).toNot(equal(subject2.hashValue))
+                            expect(subject.hashValue) != subject2.hashValue
                         }
                     }
 
@@ -495,11 +495,11 @@ class CallbackSpec: QuickSpec {
                         }
 
                         it("should not equal") {
-                            expect(subject).toNot(equal(subject2))
+                            expect(subject) != subject2
                         }
 
                         it("should generate different hashes") {
-                            expect(subject.hashValue).toNot(equal(subject2.hashValue))
+                            expect(subject.hashValue) != subject2.hashValue
                         }
                     }
                 }
@@ -575,7 +575,7 @@ class CallbackSpec: QuickSpec {
                                 }
 
                                 it("should receive result") {
-                                    expect(result.0).to(equal(1))
+                                    expect(result.0) == 1
                                     expect(result.1).to(beTrue())
                                 }
 
@@ -614,7 +614,7 @@ class CallbackSpec: QuickSpec {
                                 }
 
                                 it("should receive result") {
-                                    expect(result.0).to(equal(2))
+                                    expect(result.0) == 2
                                     expect(result.1).to(beTrue())
                                 }
 
@@ -711,7 +711,7 @@ class CallbackSpec: QuickSpec {
                                 }
 
                                 it("should receive result") {
-                                    expect(result).to(equal([1, 2]))
+                                    expect(result) == [1, 2]
                                 }
 
                                 context("when both are completed") {
@@ -746,7 +746,7 @@ class CallbackSpec: QuickSpec {
                                 }
 
                                 it("should receive result") {
-                                    expect(result).to(equal([1, 2]))
+                                    expect(result) == [1, 2]
                                 }
 
                                 context("when both are completed") {
@@ -805,11 +805,11 @@ class CallbackSpec: QuickSpec {
                         }
 
                         it("should be receive original result") {
-                            expect(originalResult).to(equal([1, 2, 3]))
+                            expect(originalResult) == [1, 2, 3]
                         }
 
                         it("should be receive mapped result") {
-                            expect(result).to(equal([1, 2, 3]))
+                            expect(result) == [1, 2, 3]
                         }
                     }
 
@@ -827,11 +827,11 @@ class CallbackSpec: QuickSpec {
                         }
 
                         it("should be receive original result") {
-                            expect(originalResult).to(equal([1, nil, 2, nil, 3]))
+                            expect(originalResult) == [1, nil, 2, nil, 3]
                         }
 
                         it("should be receive mapped result") {
-                            expect(result).to(equal([1, 2, 3]))
+                            expect(result) == [1, 2, 3]
                         }
                     }
                 }
@@ -961,7 +961,7 @@ class CallbackSpec: QuickSpec {
                                 }
 
                                 it("should receive result") {
-                                    expect(result.error).to(equal(.anyError1))
+                                    expect(result.error) == .anyError1
                                 }
 
                                 it("should not call stop") {
@@ -1001,7 +1001,7 @@ class CallbackSpec: QuickSpec {
                                 }
 
                                 it("should receive result") {
-                                    expect(result.error).to(equal(.anyError2))
+                                    expect(result.error) == .anyError2
                                 }
 
                                 it("should not call stop") {
@@ -1088,7 +1088,7 @@ class CallbackSpec: QuickSpec {
 
                                     it("should receive result") {
                                         let value = result.value
-                                        expect(value?.0).to(equal(1))
+                                        expect(value?.0) == 1
                                         expect(value?.1).to(beTrue())
                                     }
 
@@ -1130,7 +1130,7 @@ class CallbackSpec: QuickSpec {
 
                                     it("should receive result") {
                                         let value = result.value
-                                        expect(value?.0).to(equal(1))
+                                        expect(value?.0) == 1
                                         expect(value?.1).to(beTrue())
                                     }
 
@@ -1182,11 +1182,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should be receive mapped result") {
-                                expect(result.value).to(equal(0))
+                                expect(result.value) == 0
                             }
 
                             it("should be receive original result") {
-                                expect(originalResult.value).to(equal(0))
+                                expect(originalResult.value) == 0
                             }
                         }
 
@@ -1196,11 +1196,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should be receive mapped result") {
-                                expect(result.value).to(equal(-1))
+                                expect(result.value) == -1
                             }
 
                             it("should be receive original result") {
-                                expect(originalResult.value).to(equal(-1))
+                                expect(originalResult.value) == -1
                             }
                         }
 
@@ -1210,11 +1210,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should be receive mapped result") {
-                                expect(result.value).to(equal(1))
+                                expect(result.value) == 1
                             }
 
                             it("should be receive original result") {
-                                expect(originalResult.value).to(equal(1))
+                                expect(originalResult.value) == 1
                             }
                         }
 
@@ -1224,11 +1224,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should receive the same error as result") {
-                                expect(result.error).to(equal(.anyError))
+                                expect(result.error) == .anyError
                             }
 
                             it("should receive the same error as original result") {
-                                expect(originalResult.error).to(equal(.anyError1))
+                                expect(originalResult.error) == .anyError1
                             }
                         }
 
@@ -1238,11 +1238,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should receive the same error as result") {
-                                expect(result.error).to(equal(.anyError))
+                                expect(result.error) == .anyError
                             }
 
                             it("should receive the same error as original result") {
-                                expect(originalResult.error).to(equal(.anyError2))
+                                expect(originalResult.error) == .anyError2
                             }
                         }
                     }
@@ -1272,7 +1272,7 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should be receive original result") {
-                                expect(originalResult.value).to(equal(0))
+                                expect(originalResult.value) == 0
                             }
                         }
 
@@ -1286,7 +1286,7 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should be receive original result") {
-                                expect(originalResult.value).to(equal(-1))
+                                expect(originalResult.value) == -1
                             }
                         }
 
@@ -1300,7 +1300,7 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should be receive original result") {
-                                expect(originalResult.value).to(equal(1))
+                                expect(originalResult.value) == 1
                             }
                         }
 
@@ -1310,11 +1310,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should receive the same error as result") {
-                                expect(result.error).to(equal(.anyError1))
+                                expect(result.error) == .anyError1
                             }
 
                             it("should receive the same error as original result") {
-                                expect(originalResult.error).to(equal(.anyError1))
+                                expect(originalResult.error) == .anyError1
                             }
                         }
 
@@ -1324,11 +1324,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should receive the same error as result") {
-                                expect(result.error).to(equal(.anyError2))
+                                expect(result.error) == .anyError2
                             }
 
                             it("should receive the same error as original result") {
-                                expect(originalResult.error).to(equal(.anyError2))
+                                expect(originalResult.error) == .anyError2
                             }
                         }
                     }
@@ -1354,11 +1354,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should be receive mapped result") {
-                                expect(result).to(equal(0))
+                                expect(result) == 0
                             }
 
                             it("should be receive original result") {
-                                expect(originalResult.value).to(equal(0))
+                                expect(originalResult.value) == 0
                             }
                         }
 
@@ -1368,11 +1368,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should be receive mapped result") {
-                                expect(result).to(equal(-1))
+                                expect(result) == -1
                             }
 
                             it("should be receive original result") {
-                                expect(originalResult.value).to(equal(-1))
+                                expect(originalResult.value) == -1
                             }
                         }
 
@@ -1382,11 +1382,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should be receive mapped result") {
-                                expect(result).to(equal(1))
+                                expect(result) == 1
                             }
 
                             it("should be receive original result") {
-                                expect(originalResult.value).to(equal(1))
+                                expect(originalResult.value) == 1
                             }
                         }
 
@@ -1396,11 +1396,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should receive the same error as result") {
-                                expect(result).to(equal(1))
+                                expect(result) == 1
                             }
 
                             it("should receive the same error as original result") {
-                                expect(originalResult.error).to(equal(.anyError1))
+                                expect(originalResult.error) == .anyError1
                             }
                         }
 
@@ -1410,11 +1410,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should receive the same error as result") {
-                                expect(result).to(equal(2))
+                                expect(result) == 2
                             }
 
                             it("should receive the same error as original result") {
-                                expect(originalResult.error).to(equal(.anyError2))
+                                expect(originalResult.error) == .anyError2
                             }
                         }
                     }
@@ -1440,11 +1440,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should be receive mapped result") {
-                                expect(result).to(equal(0))
+                                expect(result) == 0
                             }
 
                             it("should be receive original result") {
-                                expect(originalResult.value).to(equal(0))
+                                expect(originalResult.value) == 0
                             }
                         }
 
@@ -1454,11 +1454,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should be receive mapped result") {
-                                expect(result).to(equal(-1))
+                                expect(result) == -1
                             }
 
                             it("should be receive original result") {
-                                expect(originalResult.value).to(equal(-1))
+                                expect(originalResult.value) == -1
                             }
                         }
 
@@ -1468,11 +1468,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should be receive mapped result") {
-                                expect(result).to(equal(1))
+                                expect(result) == 1
                             }
 
                             it("should be receive original result") {
-                                expect(originalResult.value).to(equal(1))
+                                expect(originalResult.value) == 1
                             }
                         }
 
@@ -1482,11 +1482,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should receive the same error as result") {
-                                expect(result).to(equal(1))
+                                expect(result) == 1
                             }
 
                             it("should receive the same error as original result") {
-                                expect(originalResult.error).to(equal(.anyError1))
+                                expect(originalResult.error) == .anyError1
                             }
                         }
 
@@ -1496,11 +1496,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should receive the same error as result") {
-                                expect(result).to(equal(1))
+                                expect(result) == 1
                             }
 
                             it("should receive the same error as original result") {
-                                expect(originalResult.error).to(equal(.anyError2))
+                                expect(originalResult.error) == .anyError2
                             }
                         }
                     }
@@ -1526,11 +1526,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should be receive mapped result") {
-                                expect(result).to(equal(0))
+                                expect(result) == 0
                             }
 
                             it("should be receive original result") {
-                                expect(originalResult.value).to(equal(0))
+                                expect(originalResult.value) == 0
                             }
                         }
 
@@ -1540,11 +1540,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should be receive mapped result") {
-                                expect(result).to(equal(-1))
+                                expect(result) == -1
                             }
 
                             it("should be receive original result") {
-                                expect(originalResult.value).to(equal(-1))
+                                expect(originalResult.value) == -1
                             }
                         }
 
@@ -1554,11 +1554,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should be receive mapped result") {
-                                expect(result).to(equal(1))
+                                expect(result) == 1
                             }
 
                             it("should be receive original result") {
-                                expect(originalResult.value).to(equal(1))
+                                expect(originalResult.value) == 1
                             }
                         }
 
@@ -1572,7 +1572,7 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should receive the same error as original result") {
-                                expect(originalResult.error).to(equal(.anyError1))
+                                expect(originalResult.error) == .anyError1
                             }
                         }
 
@@ -1586,7 +1586,7 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should receive the same error as original result") {
-                                expect(originalResult.error).to(equal(.anyError2))
+                                expect(originalResult.error) == .anyError2
                             }
                         }
                     }
@@ -1614,11 +1614,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should be receive mapped result") {
-                                expect(result).to(equal(0))
+                                expect(result) == 0
                             }
 
                             it("should be receive original result") {
-                                expect(originalResult.value).to(equal(0))
+                                expect(originalResult.value) == 0
                             }
                         }
 
@@ -1628,11 +1628,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should be receive mapped result") {
-                                expect(result).to(equal(-1))
+                                expect(result) == -1
                             }
 
                             it("should be receive original result") {
-                                expect(originalResult.value).to(equal(-1))
+                                expect(originalResult.value) == -1
                             }
                         }
 
@@ -1642,11 +1642,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should be receive mapped result") {
-                                expect(result).to(equal(1))
+                                expect(result) == 1
                             }
 
                             it("should be receive original result") {
-                                expect(originalResult.value).to(equal(1))
+                                expect(originalResult.value) == 1
                             }
                         }
 
@@ -1656,11 +1656,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should receive the same error as result") {
-                                expect(result).to(equal(value))
+                                expect(result) == value
                             }
 
                             it("should receive the same error as original result") {
-                                expect(originalResult.error).to(equal(.anyError1))
+                                expect(originalResult.error) == .anyError1
                             }
                         }
 
@@ -1670,11 +1670,11 @@ class CallbackSpec: QuickSpec {
                             }
 
                             it("should receive the same error as result") {
-                                expect(result).to(equal(value))
+                                expect(result) == value
                             }
 
                             it("should receive the same error as original result") {
-                                expect(originalResult.error).to(equal(.anyError2))
+                                expect(originalResult.error) == .anyError2
                             }
                         }
                     }
@@ -1693,7 +1693,7 @@ class CallbackSpec: QuickSpec {
                         }
 
                         it("should receive result") {
-                            expect(result.value).to(equal(1))
+                            expect(result.value) == 1
                         }
 
                         context("when destructed") {
@@ -1721,7 +1721,7 @@ class CallbackSpec: QuickSpec {
                         }
 
                         it("should receive result") {
-                            expect(result.error).to(equal(.anyError1))
+                            expect(result.error) == .anyError1
                         }
 
                         context("when destructed") {

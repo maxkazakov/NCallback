@@ -37,7 +37,7 @@ class PendingCallback_IgnorableSpec: QuickSpec {
                     }
 
                     it("should receive result") {
-                        expect(result).to(equal(.init(repeating: .testMake(), count: 5)))
+                        expect(result) == .init(repeating: .testMake(), count: 5)
                     }
                 }
             }
@@ -62,7 +62,7 @@ class PendingCallback_IgnorableSpec: QuickSpec {
                     }
 
                     it("should receive result") {
-                        expect(result).to(equal(.init(repeating: .success(.testMake()), count: 5)))
+                        expect(result) == .init(repeating: .success(.testMake()), count: 5)
                     }
                 }
 
@@ -85,7 +85,7 @@ class PendingCallback_IgnorableSpec: QuickSpec {
                     }
 
                     it("should receive result") {
-                        expect(result).to(equal(.init(repeating: .failure(.case1), count: 5)))
+                        expect(result) == .init(repeating: .failure(.case1), count: 5)
                     }
                 }
 
@@ -108,7 +108,7 @@ class PendingCallback_IgnorableSpec: QuickSpec {
                     }
 
                     it("should receive result") {
-                        expect(result).to(equal(.init(repeating: .success(1), count: 5)))
+                        expect(result) == .init(repeating: .success(1), count: 5)
                     }
                 }
             }
