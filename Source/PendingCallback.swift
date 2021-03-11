@@ -20,6 +20,10 @@ public class PendingCallback<ResultType> {
     }
 
     public func current(_ closure: @autoclosure () -> Callback) -> Callback {
+        return current(closure)
+    }
+
+    public func current(_ closure: () -> Callback) -> Callback {
         let result: Callback
 
         if let current = cached {

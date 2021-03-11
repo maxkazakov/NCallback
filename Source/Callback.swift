@@ -278,12 +278,13 @@ public class Callback<ResultType> {
         return Callback { return .failure(result()) }
     }
 
-    public func polling<Response, Error>(scheduleQueue: DispatchCallbackQueue,
+    public func polling<Response, Error>(scheduleQueue: DispatchCallbackQueue = DispatchQueue.global(),
                                          retryCount: Int = 5,
                                          timeoutInterval: TimeInterval = 10,
                                          minimumWaitingTime: TimeInterval? = nil,
                                          timeoutFailureCompletion: @escaping (Error) -> Error = { $0 },
-                                         shouldRepeat: @escaping (Result<Response, Error>) -> Bool = { _ in false }) -> Callback
+                                         shouldRepeat: @escaping (Result<Response, Error>) -> Bool = { _ in false },
+                                         response: @escaping (Result<Response, Error>) -> Void = { _ in }) -> Callback
     where ResultType == Result<Response, Error>, Error: Swift.Error {
         return PollingCallback(scheduleQueue: scheduleQueue,
                                generator: self,
@@ -291,36 +292,8 @@ public class Callback<ResultType> {
                                timeoutFailureCompletion: timeoutFailureCompletion,
                                shouldRepeat: shouldRepeat,
                                retryCount: retryCount,
-                               minimumWaitingTime: minimumWaitingTime).start()
-    }
-
-    public func polling<Response, Error>(responseQueue: CallbackQueue,
-                                         retryCount: Int = 5,
-                                         timeoutInterval: TimeInterval = 10,
-                                         minimumWaitingTime: TimeInterval? = nil,
-                                         timeoutFailureCompletion: @escaping (Error) -> Error = { $0 },
-                                         shouldRepeat: @escaping (Result<Response, Error>) -> Bool = { _ in false }) -> Callback
-    where ResultType == Result<Response, Error>, Error: Swift.Error {
-        polling(scheduleQueue: DispatchQueue.global(),
-                retryCount: retryCount,
-                timeoutInterval: timeoutInterval,
-                minimumWaitingTime: minimumWaitingTime,
-                timeoutFailureCompletion: timeoutFailureCompletion,
-                shouldRepeat: shouldRepeat)
-    }
-
-    public func polling<Response, Error>(retryCount: Int = 5,
-                                         timeoutInterval: TimeInterval = 10,
-                                         minimumWaitingTime: TimeInterval? = nil,
-                                         timeoutFailureCompletion: @escaping (Error) -> Error = { $0 },
-                                         shouldRepeat: @escaping (Result<Response, Error>) -> Bool = { _ in false }) -> Callback
-    where ResultType == Result<Response, Error>, Error: Swift.Error {
-        polling(scheduleQueue: DispatchQueue.global(),
-                retryCount: retryCount,
-                timeoutInterval: timeoutInterval,
-                minimumWaitingTime: minimumWaitingTime,
-                timeoutFailureCompletion: timeoutFailureCompletion,
-                shouldRepeat: shouldRepeat)
+                               minimumWaitingTime: minimumWaitingTime,
+                               response: response).start()
     }
 }
 

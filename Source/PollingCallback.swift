@@ -16,6 +16,7 @@ class PollingCallback<Response, Error: Swift.Error> {
     private let timeoutInterval: TimeInterval
     private let failureCompletion: (Error) -> Error
     private let shouldRepeat: (ResultType) -> Bool
+    private let response: (ResultType) -> Void
 
     private let timestamp: TimeInterval
     private let minimumWaitingTime: TimeInterval?
@@ -27,7 +28,8 @@ class PollingCallback<Response, Error: Swift.Error> {
          timeoutFailureCompletion: @escaping ((Error) -> Error) = { $0 },
          shouldRepeat: @escaping (ResultType) -> Bool = { _ in false },
          retryCount: Int = 5,
-         minimumWaitingTime: TimeInterval? = nil) {
+         minimumWaitingTime: TimeInterval? = nil,
+         response: @escaping (Result<Response, Error>) -> Void = { _ in }) {
         self.scheduleQueue = scheduleQueue
         self.generator = generator
         self.timeoutInterval = timeoutInterval
@@ -36,6 +38,7 @@ class PollingCallback<Response, Error: Swift.Error> {
         self.timestamp = Self.timestamp()
         self.retryCount = retryCount
         self.minimumWaitingTime = minimumWaitingTime
+        self.response = response
     }
 
     func start() -> Callback<ResultType> {
@@ -85,6 +88,8 @@ class PollingCallback<Response, Error: Swift.Error> {
                     actual.complete(.failure(self.failureCompletion(error)))
                 }
             }
+
+            self.response(result)
         }
     }
 
