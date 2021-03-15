@@ -64,9 +64,7 @@ public class Callback<ResultType> {
     // MARK: - completion
     public func complete(_ result: ResultType) {
         queue.fire {
-            if !self.lock.tryLock() {
-                return
-            }
+            let locked = self.lock.tryLock()
 
             let beforeCallback = self.beforeCallback
             let completeCallback = self.completeCallback
@@ -81,7 +79,9 @@ public class Callback<ResultType> {
 
             self.strongyfy = nil
 
-            self.lock.unlock()
+            if locked {
+                self.lock.unlock()
+            }
 
             beforeCallback?(result)
             completeCallback?(result)
@@ -121,29 +121,82 @@ public class Callback<ResultType> {
         start(self)
     }
 
-    public func onComplete(options: CallbackOption = .default, _ callback: @escaping () -> Void) where ResultType == Ignorable {
-        onComplete(options: options) { _ in
-            callback()
+    public func onSyncedComplete(options: CallbackOption = .default, _ callback: Completion) {
+        let semaphore = DispatchSemaphore(value: 0)
+        var result: ResultType!
+
+        onComplete(options: options) {
+            result = $0
+            semaphore.signal()
         }
+        semaphore.wait()
+
+        callback(result)
     }
 
-    public func waitCompletion(of callback: Callback) {
-        callback.onComplete(options: .oneOff(.selfRetained)) { [weak self] in
-            self?.complete($0)
-        }
+    public func andThen<T>(of waiter: @escaping (ResultType) -> Callback<T>) -> Callback<(ResultType, T)> {
+        let lazy = LazyGenerator(generator: waiter)
+        return .init(start: { actual in
+            let actual = actual
+            self.onComplete(options: .oneOff(.weakness)) { [unowned actual] result1 in
+                lazy.cached(result1).onComplete(options: .oneOff(.weakness)) { [unowned actual] result2 in
+                    actual.complete((result1, result2))
+                }
+            }
+        }, stop: { _ in
+            self.cancel()
+            lazy.cachedCallback?.cancel()
+        })
+    }
+
+    public func first<A, B>() -> Callback<A> where ResultType == (A, B) {
+        return flatMap(\.0)
+    }
+
+    public func second<A, B>() -> Callback<B> where ResultType == (A, B) {
+        return flatMap(\.1)
+    }
+
+    public func waitCompletion(of original: Callback) {
+        let lazy = LazyGenerator(generator: self)
+        Callback(start: { actual in
+            let actual = actual
+            original.onComplete(options: .oneOff(.weakness)) { [unowned actual] result in
+                lazy.cached().complete(result)
+                actual.complete(result)
+            }
+        }, stop: { _ in
+            original.cancel()
+            lazy.cachedCallback?.cancel()
+        }).oneWay()
     }
 
     public func oneWay(options: CallbackOption = .default) {
         onComplete(options: options, { _ in })
     }
 
-    // MARK: - queueing
-    public func schedule(in queue: DispatchCallbackQueue) {
-        self.queue = .async(queue)
+    public func oneWaySynced(options: CallbackOption = .default) {
+        let semaphore = DispatchSemaphore(value: 0)
+        onComplete(options: options, { _ in
+            semaphore.signal()
+        })
+        semaphore.wait()
     }
 
-    public func schedule(in queue: CallbackQueue) {
+    // MARK: - queueing
+    public func schedule(in queue: DispatchQueue) -> Self {
+        self.queue = .async(queue)
+        return self
+    }
+
+    public func schedule(in queue: DispatchCallbackQueue) -> Self {
+        self.queue = .async(queue)
+        return self
+    }
+
+    public func schedule(in queue: CallbackQueue) -> Self {
         self.queue = queue
+        return self
     }
 
     // MARK: - mapping
@@ -460,5 +513,34 @@ private class UnfairLock {
 
     func unlock() {
         os_unfair_lock_unlock(&unfairLock)
+    }
+}
+
+private final class LazyGenerator<In, Out> {
+    typealias Generator = (In) -> Callback<Out>
+    private let generator: Generator
+    private(set) var cachedCallback: Callback<Out>?
+
+    init(generator: @escaping Generator) {
+        self.generator = generator
+    }
+
+    init(generator: @autoclosure @escaping () -> Callback<Out>) where In == Void {
+        self.generator = { _ in
+            return generator()
+        }
+    }
+
+    func cached(_ in: In) -> Callback<Out> {
+        if let cached = cachedCallback {
+            return cached
+        }
+        let new = generator(`in`)
+        cachedCallback = new
+        return new
+    }
+
+    func cached() -> Callback<Out> where In == Void {
+        return cached(Void())
     }
 }

@@ -26,4 +26,21 @@ public extension Callback {
     class func success<Error>() -> ResultCallback<Ignorable, Error> {
         return .success(.init())
     }
+
+    func onComplete(options: CallbackOption = .default, _ callback: @escaping () -> Void) where ResultType == Ignorable {
+        onComplete(options: options) { _ in
+            callback()
+        }
+    }
+
+    func onSyncedComplete(options: CallbackOption = .default, _ callback: () -> Void) where ResultType == Ignorable {
+        let semaphore = DispatchSemaphore(value: 0)
+
+        onComplete(options: options) { _ in
+            semaphore.signal()
+        }
+        semaphore.wait()
+
+        callback()
+    }
 }
