@@ -134,7 +134,7 @@ public class Callback<ResultType> {
         callback(result)
     }
 
-    public func andThen<T>(of waiter: @escaping (ResultType) -> Callback<T>) -> Callback<(ResultType, T)> {
+    public func andThen<T>(_ waiter: @escaping (ResultType) -> Callback<T>) -> Callback<(ResultType, T)> {
         let lazy = LazyGenerator(generator: waiter)
         return .init(start: { actual in
             let actual = actual
@@ -331,18 +331,16 @@ public class Callback<ResultType> {
         return Callback { return .failure(result()) }
     }
 
-    public func polling<Response, Error>(scheduleQueue: DispatchCallbackQueue = DispatchQueue.global(),
+    public func polling<Response, Error>(scheduleQueue: DispatchCallbackQueue? = nil,
                                          retryCount: Int = 5,
-                                         timeoutInterval: TimeInterval = 10,
+                                         idleTimeInterval: TimeInterval = 10,
                                          minimumWaitingTime: TimeInterval? = nil,
-                                         timeoutFailureCompletion: @escaping (Error) -> Error = { $0 },
                                          shouldRepeat: @escaping (Result<Response, Error>) -> Bool = { _ in false },
                                          response: @escaping (Result<Response, Error>) -> Void = { _ in }) -> Callback
     where ResultType == Result<Response, Error>, Error: Swift.Error {
         return PollingCallback(scheduleQueue: scheduleQueue,
                                generator: self,
-                               timeoutInterval: timeoutInterval,
-                               timeoutFailureCompletion: timeoutFailureCompletion,
+                               idleTimeInterval: idleTimeInterval,
                                shouldRepeat: shouldRepeat,
                                retryCount: retryCount,
                                minimumWaitingTime: minimumWaitingTime,

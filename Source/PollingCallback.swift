@@ -1,8 +1,8 @@
 import Foundation
 
-let defaultScheduleQueue: DispatchCallbackQueue = DispatchQueue(label: "PollingCallback",
-                                                                qos: DispatchQoS.utility,
-                                                                attributes: DispatchQueue.Attributes.concurrent)
+private let defaultScheduleQueue: DispatchCallbackQueue = DispatchQueue(label: "PollingCallback",
+                                                                        qos: DispatchQoS.utility,
+                                                                        attributes: .concurrent)
 
 final
 class PollingCallback<Response, Error: Swift.Error> {
@@ -10,11 +10,11 @@ class PollingCallback<Response, Error: Swift.Error> {
 
     private let generator: () -> Callback<ResultType>
     private var cached: Callback<ResultType>?
+    private var isCanceled: Bool = false
 
     private let scheduleQueue: DispatchCallbackQueue
 
-    private let timeoutInterval: TimeInterval
-    private let failureCompletion: (Error) -> Error
+    private let idleTimeInterval: TimeInterval
     private let shouldRepeat: (ResultType) -> Bool
     private let response: (ResultType) -> Void
 
@@ -22,23 +22,23 @@ class PollingCallback<Response, Error: Swift.Error> {
     private let minimumWaitingTime: TimeInterval?
     private let retryCount: Int
 
-    init(scheduleQueue: DispatchCallbackQueue = defaultScheduleQueue,
+    init(scheduleQueue: DispatchCallbackQueue?,
          generator: @escaping @autoclosure () -> Callback<ResultType>,
-         timeoutInterval: TimeInterval = 5,
-         timeoutFailureCompletion: @escaping ((Error) -> Error) = { $0 },
+         idleTimeInterval: TimeInterval,
          shouldRepeat: @escaping (ResultType) -> Bool = { _ in false },
          retryCount: Int = 5,
          minimumWaitingTime: TimeInterval? = nil,
          response: @escaping (Result<Response, Error>) -> Void = { _ in }) {
-        self.scheduleQueue = scheduleQueue
+        assert(retryCount > 0, "do you really need polling? seems like `retryCount <= 0` is ignoring polling")
+
+        self.scheduleQueue = scheduleQueue ?? defaultScheduleQueue
         self.generator = generator
-        self.timeoutInterval = timeoutInterval
-        self.failureCompletion = timeoutFailureCompletion
+        self.idleTimeInterval = idleTimeInterval
         self.shouldRepeat = shouldRepeat
-        self.timestamp = Self.timestamp()
-        self.retryCount = retryCount
+        self.retryCount = max(1, retryCount)
         self.minimumWaitingTime = minimumWaitingTime
         self.response = response
+        self.timestamp = Self.timestamp()
     }
 
     func start() -> Callback<ResultType> {
@@ -50,15 +50,15 @@ class PollingCallback<Response, Error: Swift.Error> {
     }
 
     func cancel() {
+        isCanceled = true
         cached?.cancel()
+        cached = nil
     }
 
     private func new() -> Callback<ResultType> {
         let new = generator()
         cached = new
-        return new.beforeComplete { [unowned self] _ in
-            self.cached = nil
-        }
+        return new
     }
 
     private func canWait() -> Bool {
@@ -69,14 +69,18 @@ class PollingCallback<Response, Error: Swift.Error> {
     }
 
     func canRepeat(_ retryCount: Int) -> Bool {
-        retryCount > 0 || canWait()
+        return retryCount > 0 || canWait()
     }
 
     private static func timestamp() -> TimeInterval {
-        max(Date().timeIntervalSinceReferenceDate, 0)
+        return max(Date().timeIntervalSinceReferenceDate, 0)
     }
 
     private func startPolling(_ actual: Callback<ResultType>, retryCount: Int) {
+        if isCanceled {
+            return
+        }
+
         new().onComplete(options: .repeatable(.weakness)) { [unowned self] result in
             if self.canRepeat(retryCount) && self.shouldRepeat(result) {
                 self.schedulePolling(actual, retryCount: retryCount - 1)
@@ -85,7 +89,7 @@ class PollingCallback<Response, Error: Swift.Error> {
                 case .success:
                     actual.complete(result)
                 case .failure(let error):
-                    actual.complete(.failure(self.failureCompletion(error)))
+                    actual.complete(.failure(error))
                 }
             }
 
@@ -94,7 +98,7 @@ class PollingCallback<Response, Error: Swift.Error> {
     }
 
     private func schedulePolling(_ actual: Callback<ResultType>, retryCount: Int) {
-        scheduleQueue.asyncAfter(.now() + timeoutInterval) { [unowned self] in
+        scheduleQueue.asyncAfter(.now() + idleTimeInterval) { [unowned self] in
             self.startPolling(actual, retryCount: retryCount)
         }
     }

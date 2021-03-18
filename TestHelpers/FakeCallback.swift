@@ -27,7 +27,7 @@ public class FakeCallback<ResultType>: Callback<ResultType>, Spryable {
         case map = "map(_:)"
         case mapError = "mapError(_:)"
 
-        case polling = "polling(scheduleQueue:retryCount:timeoutInterval:minimumWaitingTime:timeoutFailureCompletion:shouldRepeat:)"
+        case polling = "polling(scheduleQueue:retryCount:idleTimeInterval:minimumWaitingTime:shouldRepeat:response:)"
         case scheduleInQueue = "schedule(in:)"
     }
 
@@ -97,21 +97,25 @@ public class FakeCallback<ResultType>: Callback<ResultType>, Spryable {
         return spryify(arguments: result())
     }
 
-    public override func polling<Response, Error>(scheduleQueue: DispatchCallbackQueue,
+    public override func polling<Response, Error>(scheduleQueue: DispatchCallbackQueue? = nil,
                                                   retryCount: Int = 5,
-                                                  timeoutInterval: TimeInterval = 10,
+                                                  idleTimeInterval: TimeInterval = 10,
                                                   minimumWaitingTime: TimeInterval? = nil,
-                                                  timeoutFailureCompletion: @escaping (Error) -> Error = { $0 },
-                                                  shouldRepeat: @escaping (ResultType) -> Bool = { _ in false }) -> Callback<ResultType>
-    where ResultType == Result<Response, Error>, Error: Swift.Error {
-        return spryify(arguments: scheduleQueue, retryCount, timeoutInterval, minimumWaitingTime, timeoutFailureCompletion, shouldRepeat)
+                                                  shouldRepeat: @escaping (Result<Response, Error>) -> Bool = { _ in false },
+                                                  response: @escaping (Result<Response, Error>) -> Void = { _ in }) -> Callback<Result<Response, Error>>
+    where ResultType == Result<Response, Error> {
+        return spryify(arguments: scheduleQueue, retryCount, idleTimeInterval, minimumWaitingTime, shouldRepeat, response)
     }
 
-    public override func schedule(in queue: CallbackQueue) {
+    public override func schedule(in queue: DispatchCallbackQueue) -> Self {
         return spryify(arguments: queue)
     }
 
-    public override func schedule(in queue: DispatchCallbackQueue) {
+    public override func schedule(in queue: CallbackQueue) -> Self {
+        return spryify(arguments: queue)
+    }
+
+    public override func schedule(in queue: DispatchQueue) -> Self {
         return spryify(arguments: queue)
     }
 }
