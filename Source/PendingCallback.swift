@@ -11,6 +11,7 @@ public class PendingCallback<ResultType> {
     private var deferredCallback: Completion?
 
     private var cached: Callback?
+    private let lock: UnfairLock = .init()
 
     public var isPending: Bool {
         cached != nil
@@ -24,6 +25,7 @@ public class PendingCallback<ResultType> {
     }
 
     public func current(_ closure: () -> Callback) -> Callback {
+        let locked = lock.tryLock()
         let result: Callback
 
         if let current = cached {
@@ -41,6 +43,10 @@ public class PendingCallback<ResultType> {
             result.deferred { [weak self] in
                 self?.deferredCallback?($0)
             }
+        }
+
+        if locked {
+            lock.unlock()
         }
 
         return result
@@ -63,10 +69,16 @@ public class PendingCallback<ResultType> {
 
     @discardableResult
     public func deferred(_ callback: @escaping Completion) -> Self {
+        let locked = lock.tryLock()
         let originalCallback = deferredCallback
+
         deferredCallback = { result in
             originalCallback?(result)
             callback(result)
+        }
+
+        if locked {
+            lock.unlock()
         }
 
         return self
@@ -74,10 +86,16 @@ public class PendingCallback<ResultType> {
 
     @discardableResult
     public func beforeComplete(_ callback: @escaping Completion) -> Self {
+        let locked = lock.tryLock()
         let originalCallback = beforeCallback
+
         beforeCallback = { result in
             originalCallback?(result)
             callback(result)
+        }
+
+        if locked {
+            lock.unlock()
         }
 
         return self

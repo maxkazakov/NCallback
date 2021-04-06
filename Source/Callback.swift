@@ -220,10 +220,16 @@ public class Callback<ResultType> {
     // MARK: - defer
     @discardableResult
     public func deferred(_ callback: @escaping Completion) -> Callback<ResultType> {
+        let locked = self.lock.tryLock()
+
         let originalCallback = deferredCallback
         deferredCallback = { result in
             originalCallback?(result)
             callback(result)
+        }
+
+        if locked {
+            self.lock.unlock()
         }
 
         return self
@@ -231,10 +237,16 @@ public class Callback<ResultType> {
 
     @discardableResult
     public func beforeComplete(_ callback: @escaping Completion) -> Callback<ResultType> {
+        let locked = self.lock.tryLock()
+        
         let originalCallback = beforeCallback
         beforeCallback = { result in
             originalCallback?(result)
             callback(result)
+        }
+
+        if locked {
+            self.lock.unlock()
         }
 
         return self
@@ -499,19 +511,6 @@ public func zip<ResponseA, ResponseB, Error: Swift.Error>(_ lhs: ResultCallback<
 
     return .init(start: startTask,
                  stop: stopTask)
-}
-
-final
-private class UnfairLock {
-    private var unfairLock = os_unfair_lock_s()
-
-    func tryLock() -> Bool {
-        os_unfair_lock_trylock(&unfairLock)
-    }
-
-    func unlock() {
-        os_unfair_lock_unlock(&unfairLock)
-    }
 }
 
 private final class LazyGenerator<In, Out> {
