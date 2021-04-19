@@ -1,13 +1,13 @@
 import Foundation
 
-public enum MemoryOption {
+public enum MemoryOption: Equatable {
     case selfRetained
     case weakness
 
     public static let `default`: MemoryOption = .selfRetained
 }
 
-public enum CallbackOption {
+public enum CallbackOption: Equatable {
     case oneOff(MemoryOption)
     case repeatable(MemoryOption)
 
