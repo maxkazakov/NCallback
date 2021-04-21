@@ -15,6 +15,8 @@ Pod::Spec.new do |spec|
 
     spec.frameworks = 'Foundation'
 
+    spec.dependency 'NQueue'
+
     spec.resources = ['Source/**/*.{storyboard,xib,xcassets,json,imageset,png,strings,stringsdict}']
     spec.source_files  = 'Source/**/*.swift'
 end

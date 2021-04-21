@@ -1,8 +1,9 @@
 import Foundation
+import NQueue
 
-private let defaultScheduleQueue: DispatchCallbackQueue = DispatchQueue(label: "PollingCallback",
-                                                                        qos: DispatchQoS.utility,
-                                                                        attributes: .concurrent)
+private let defaultScheduleQueue: Queueable = Queue.custom(label: "PollingCallback",
+                                                           qos: .utility,
+                                                           attributes: .concurrent)
 
 final
 class PollingCallback<Response, Error: Swift.Error> {
@@ -12,7 +13,7 @@ class PollingCallback<Response, Error: Swift.Error> {
     private var cached: Callback<ResultType>?
     private var isCanceled: Bool = false
 
-    private let scheduleQueue: DispatchCallbackQueue
+    private let scheduleQueue: Queueable
 
     private let idleTimeInterval: TimeInterval
     private let shouldRepeat: (ResultType) -> Bool
@@ -22,7 +23,7 @@ class PollingCallback<Response, Error: Swift.Error> {
     private let minimumWaitingTime: TimeInterval?
     private let retryCount: Int
 
-    init(scheduleQueue: DispatchCallbackQueue?,
+    init(scheduleQueue: Queueable?,
          generator: @escaping @autoclosure () -> Callback<ResultType>,
          idleTimeInterval: TimeInterval,
          shouldRepeat: @escaping (ResultType) -> Bool = { _ in false },
@@ -98,7 +99,7 @@ class PollingCallback<Response, Error: Swift.Error> {
     }
 
     private func schedulePolling(_ actual: Callback<ResultType>, retryCount: Int) {
-        scheduleQueue.asyncAfter(.now() + idleTimeInterval) { [unowned self] in
+        scheduleQueue.asyncAfter(deadline: .now() + idleTimeInterval) { [unowned self] in
             self.startPolling(actual, retryCount: retryCount)
         }
     }

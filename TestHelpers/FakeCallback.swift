@@ -1,5 +1,7 @@
 import Foundation
 import Spry
+import NCallback
+import NQueue
 
 @testable import NCallback
 
@@ -97,7 +99,7 @@ public class FakeCallback<ResultType>: Callback<ResultType>, Spryable {
         return spryify(arguments: result())
     }
 
-    public override func polling<Response, Error>(scheduleQueue: DispatchCallbackQueue? = nil,
+    public override func polling<Response, Error>(scheduleQueue: Queueable? = nil,
                                                   retryCount: Int = 5,
                                                   idleTimeInterval: TimeInterval = 10,
                                                   minimumWaitingTime: TimeInterval? = nil,
@@ -107,15 +109,11 @@ public class FakeCallback<ResultType>: Callback<ResultType>, Spryable {
         return spryify(arguments: scheduleQueue, retryCount, idleTimeInterval, minimumWaitingTime, shouldRepeat, response)
     }
 
-    public override func schedule(in queue: DispatchCallbackQueue) -> Self {
+    public override func schedule(in queue: DelayedQueue) -> Self {
         return spryify(arguments: queue)
     }
 
-    public override func schedule(in queue: CallbackQueue) -> Self {
-        return spryify(arguments: queue)
-    }
-
-    public override func schedule(in queue: DispatchQueue) -> Self {
+    public override func schedule(in queue: Queueable) -> Self {
         return spryify(arguments: queue)
     }
 }

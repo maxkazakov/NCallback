@@ -1,4 +1,5 @@
 import Foundation
+import NQueue
 
 public enum MemoryOption: Equatable {
     case selfRetained
@@ -29,8 +30,8 @@ public class Callback<ResultType> {
     private var deferredCallback: Completion?
     private var strongyfy: Callback?
     private var options: CallbackOption = .default
-    private var lock: UnfairLock = .init()
-    private var queue: CallbackQueue = .absent
+    private var mutex: Mutexing = Mutex.unfair
+    private var queue: DelayedQueue = .absent
 
     public var hashKey: String?
 
@@ -64,41 +65,35 @@ public class Callback<ResultType> {
     // MARK: - completion
     public func complete(_ result: ResultType) {
         queue.fire {
-            let locked = self.lock.tryLock()
+            typealias Callbacks = (before: Completion?, complete: Completion?, deferred: Completion?)
 
-            let beforeCallback = self.beforeCallback
-            let completeCallback = self.completeCallback
-            let deferredCallback = self.deferredCallback
+            let callbacks: Callbacks = self.mutex.trySync {
+                let callbacks: Callbacks = (before: self.beforeCallback, complete: self.completeCallback, deferred: self.deferredCallback)
 
-            switch self.options {
-            case .oneOff:
-                self.completeCallback = nil
-            case .repeatable:
-                break
+                switch self.options {
+                case .oneOff:
+                    self.completeCallback = nil
+                case .repeatable:
+                    break
+                }
+
+                self.strongyfy = nil
+
+                return callbacks
             }
 
-            self.strongyfy = nil
-
-            if locked {
-                self.lock.unlock()
-            }
-
-            beforeCallback?(result)
-            completeCallback?(result)
-            deferredCallback?(result)
+            callbacks.before?(result)
+            callbacks.complete?(result)
+            callbacks.deferred?(result)
         }
     }
 
     public func cancel() {
-        if !lock.tryLock() {
-            return
+        mutex.trySync {
+            completeCallback = nil
+            strongyfy = nil
+            stop(self)
         }
-
-        completeCallback = nil
-        strongyfy = nil
-        stop(self)
-
-        lock.unlock()
     }
 
     public func onComplete(options: CallbackOption = .default, _ callback: @escaping Completion) {
@@ -184,17 +179,12 @@ public class Callback<ResultType> {
     }
 
     // MARK: - queueing
-    public func schedule(in queue: DispatchQueue) -> Self {
+    public func schedule(in queue: Queueable) -> Self {
         self.queue = .async(queue)
         return self
     }
 
-    public func schedule(in queue: DispatchCallbackQueue) -> Self {
-        self.queue = .async(queue)
-        return self
-    }
-
-    public func schedule(in queue: CallbackQueue) -> Self {
+    public func schedule(in queue: DelayedQueue) -> Self {
         self.queue = queue
         return self
     }
@@ -220,16 +210,12 @@ public class Callback<ResultType> {
     // MARK: - defer
     @discardableResult
     public func deferred(_ callback: @escaping Completion) -> Callback<ResultType> {
-        let locked = self.lock.tryLock()
-
-        let originalCallback = deferredCallback
-        deferredCallback = { result in
-            originalCallback?(result)
-            callback(result)
-        }
-
-        if locked {
-            self.lock.unlock()
+        mutex.trySync {
+            let originalCallback = deferredCallback
+            deferredCallback = { result in
+                originalCallback?(result)
+                callback(result)
+            }
         }
 
         return self
@@ -237,16 +223,12 @@ public class Callback<ResultType> {
 
     @discardableResult
     public func beforeComplete(_ callback: @escaping Completion) -> Callback<ResultType> {
-        let locked = self.lock.tryLock()
-        
-        let originalCallback = beforeCallback
-        beforeCallback = { result in
-            originalCallback?(result)
-            callback(result)
-        }
-
-        if locked {
-            self.lock.unlock()
+        mutex.trySync {
+            let originalCallback = beforeCallback
+            beforeCallback = { result in
+                originalCallback?(result)
+                callback(result)
+            }
         }
 
         return self
@@ -343,7 +325,7 @@ public class Callback<ResultType> {
         return Callback { return .failure(result()) }
     }
 
-    public func polling<Response, Error>(scheduleQueue: DispatchCallbackQueue? = nil,
+    public func polling<Response, Error>(scheduleQueue: Queueable? = nil,
                                          retryCount: Int = 5,
                                          idleTimeInterval: TimeInterval = 10,
                                          minimumWaitingTime: TimeInterval? = nil,

@@ -13,25 +13,30 @@ let package = Package(
         .library(name: "NCallbackTestHelpers", targets: ["NCallbackTestHelpers"])
     ],
     dependencies: [
-        .package(url: "https://github.com/NikSativa/Spry.git", .upToNextMajor(from: "3.3.0")),
+        .package(url: "https://github.com/NikSativa/Spry.git", .upToNextMajor(from: "3.4.3")),
         .package(url: "https://github.com/Quick/Quick.git", .upToNextMajor(from: "3.1.2")),
-        .package(url: "https://github.com/Quick/Nimble.git", .upToNextMajor(from: "8.0.0"))
+        .package(url: "https://github.com/Quick/Nimble.git", .upToNextMajor(from: "9.0.0")),
+        .package(url: "git@github.com:NikSativa/NQueue.git", .upToNextMajor(from: "1.0.0"))
     ],
     targets: [
         .target(name: "NCallback",
-                dependencies: [],
+                dependencies: ["NQueue"],
                 path: "Source"),
         .target(name: "NCallbackTestHelpers",
                 dependencies: ["NCallback",
+                               "NQueue",
+                               .product(name: "NQueueTestHelpers", package: "NQueue"),
                                "Spry"],
                 path: "TestHelpers"),
         .testTarget(name: "NCallbackTests",
                     dependencies: ["NCallback",
                                    "NCallbackTestHelpers",
+                                   "NQueue",
+                                   .product(name: "NQueueTestHelpers", package: "NQueue"),
                                    "Spry",
                                    .product(name: "Spry_Nimble", package: "Spry"),
                                    "Nimble",
-                                   "Quick",],
+                                   "Quick"],
                     path: "Tests/Specs")
     ],
     swiftLanguageVersions: [.v5]

@@ -18,6 +18,8 @@ Pod::Spec.new do |spec|
 
     spec.dependency 'Spry'
     spec.dependency 'NCallback'
+    spec.dependency 'NQueue'
+    spec.dependency 'NQueueTestHelpers'
 
     spec.frameworks = 'XCTest', 'Foundation'
 

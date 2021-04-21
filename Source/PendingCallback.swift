@@ -1,4 +1,5 @@
 import Foundation
+import NQueue
 
 public typealias PendingResultCallback<Response, Error: Swift.Error> = PendingCallback<Result<Response, Error>>
 
@@ -11,7 +12,7 @@ public class PendingCallback<ResultType> {
     private var deferredCallback: Completion?
 
     private var cached: Callback?
-    private let lock: UnfairLock = .init()
+    private let mutex: Mutexing = Mutex.unfair
 
     public var isPending: Bool {
         cached != nil
@@ -25,31 +26,28 @@ public class PendingCallback<ResultType> {
     }
 
     public func current(_ closure: () -> Callback) -> Callback {
-        let locked = lock.tryLock()
-        let result: Callback
+        return mutex.trySync {
+            let result: Callback
 
-        if let current = cached {
-            result = .init()
-            current.deferred(result.complete)
-        } else {
-            result = closure()
-            cached = result
+            if let current = cached {
+                result = .init()
+                current.deferred(result.complete)
+            } else {
+                result = closure()
+                cached = result
 
-            result.beforeComplete { [weak self] in
-                self?.cached = nil
-                self?.beforeCallback?($0)
+                result.beforeComplete { [weak self] in
+                    self?.cached = nil
+                    self?.beforeCallback?($0)
+                }
+
+                result.deferred { [weak self] in
+                    self?.deferredCallback?($0)
+                }
             }
 
-            result.deferred { [weak self] in
-                self?.deferredCallback?($0)
-            }
+            return result
         }
-
-        if locked {
-            lock.unlock()
-        }
-
-        return result
     }
 
     public func current(_ closure: @escaping ServiceClosure) -> Callback {
@@ -69,33 +67,26 @@ public class PendingCallback<ResultType> {
 
     @discardableResult
     public func deferred(_ callback: @escaping Completion) -> Self {
-        let locked = lock.tryLock()
-        let originalCallback = deferredCallback
+        mutex.trySync {
+            let originalCallback = deferredCallback
 
-        deferredCallback = { result in
-            originalCallback?(result)
-            callback(result)
+            deferredCallback = { result in
+                originalCallback?(result)
+                callback(result)
+            }
         }
-
-        if locked {
-            lock.unlock()
-        }
-
         return self
     }
 
     @discardableResult
     public func beforeComplete(_ callback: @escaping Completion) -> Self {
-        let locked = lock.tryLock()
-        let originalCallback = beforeCallback
+        mutex.trySync {
+            let originalCallback = beforeCallback
 
-        beforeCallback = { result in
-            originalCallback?(result)
-            callback(result)
-        }
-
-        if locked {
-            lock.unlock()
+            beforeCallback = { result in
+                originalCallback?(result)
+                callback(result)
+            }
         }
 
         return self
