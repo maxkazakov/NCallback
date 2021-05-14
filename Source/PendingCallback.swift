@@ -26,7 +26,7 @@ public class PendingCallback<ResultType> {
     }
 
     public func current(_ closure: () -> Callback) -> Callback {
-        return mutex.trySync {
+        return mutex.sync {
             let result: Callback
 
             if let current = cached {
@@ -67,7 +67,7 @@ public class PendingCallback<ResultType> {
 
     @discardableResult
     public func deferred(_ callback: @escaping Completion) -> Self {
-        mutex.trySync {
+        mutex.sync {
             let originalCallback = deferredCallback
 
             deferredCallback = { result in
@@ -80,7 +80,7 @@ public class PendingCallback<ResultType> {
 
     @discardableResult
     public func beforeComplete(_ callback: @escaping Completion) -> Self {
-        mutex.trySync {
+        mutex.sync {
             let originalCallback = beforeCallback
 
             beforeCallback = { result in

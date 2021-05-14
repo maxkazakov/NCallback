@@ -30,7 +30,7 @@ public class Callback<ResultType> {
     private var deferredCallback: Completion?
     private var strongyfy: Callback?
     private var options: CallbackOption = .default
-    private var mutex: Mutexing = Mutex.unfair
+    private var mutex: Mutexing = Mutex.pthread(.recursive)
     private var queue: DelayedQueue = .absent
 
     public var hashKey: String?
@@ -67,7 +67,7 @@ public class Callback<ResultType> {
         queue.fire {
             typealias Callbacks = (before: Completion?, complete: Completion?, deferred: Completion?)
 
-            let callbacks: Callbacks = self.mutex.trySync {
+            let callbacks: Callbacks = self.mutex.sync {
                 let callbacks: Callbacks = (before: self.beforeCallback, complete: self.completeCallback, deferred: self.deferredCallback)
 
                 switch self.options {
@@ -89,7 +89,7 @@ public class Callback<ResultType> {
     }
 
     public func cancel() {
-        mutex.trySync {
+        mutex.sync {
             completeCallback = nil
             strongyfy = nil
             stop(self)
@@ -210,7 +210,7 @@ public class Callback<ResultType> {
     // MARK: - defer
     @discardableResult
     public func deferred(_ callback: @escaping Completion) -> Callback<ResultType> {
-        mutex.trySync {
+        mutex.sync {
             let originalCallback = deferredCallback
             deferredCallback = { result in
                 originalCallback?(result)
@@ -223,7 +223,7 @@ public class Callback<ResultType> {
 
     @discardableResult
     public func beforeComplete(_ callback: @escaping Completion) -> Callback<ResultType> {
-        mutex.trySync {
+        mutex.sync {
             let originalCallback = beforeCallback
             beforeCallback = { result in
                 originalCallback?(result)
