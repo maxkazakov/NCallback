@@ -11,6 +11,7 @@ public class PendingCallback<ResultType> {
     private var beforeCallback: Completion?
     private var deferredCallback: Completion?
 
+    private var isInProgress: Bool = false
     private var cached: Callback?
     private let mutex: Mutexing = Mutex.unfair
 
@@ -26,28 +27,37 @@ public class PendingCallback<ResultType> {
     }
 
     public func current(_ closure: () -> Callback) -> Callback {
-        return mutex.sync {
-            let result: Callback
-
-            if let current = cached {
-                result = .init()
-                current.deferred(result.complete)
+        let original: Callback = mutex.sync {
+            let computed: Callback
+            if let cached = self.cached {
+                computed = cached
             } else {
-                result = closure()
-                cached = result
+                computed = closure()
+                self.cached = computed
+            }
+            return computed
+        }
 
-                result.beforeComplete { [weak self] in
-                    self?.cached = nil
-                    self?.beforeCallback?($0)
-                }
+        return .init(start: { actual in
+            self.mutex.sync {
+                if self.isInProgress {
+                    original.deferred(actual.complete)
+                } else {
+                    self.isInProgress = true
+                    original.beforeComplete { [weak self] in
+                        self?.cached = nil
+                        self?.isInProgress = false
+                        self?.beforeCallback?($0)
+                    }
 
-                result.deferred { [weak self] in
-                    self?.deferredCallback?($0)
+                    original.deferred { [weak self] in
+                        self?.deferredCallback?($0)
+                    }
+
+                    actual.waitCompletion(of: original)
                 }
             }
-
-            return result
-        }
+        })
     }
 
     public func current(_ closure: @escaping ServiceClosure) -> Callback {
