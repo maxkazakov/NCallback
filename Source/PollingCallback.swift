@@ -52,7 +52,6 @@ class PollingCallback<Response, Error: Swift.Error> {
 
     func cancel() {
         isCanceled = true
-        cached?.cancel()
         cached = nil
     }
 

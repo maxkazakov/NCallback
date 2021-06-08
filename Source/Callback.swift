@@ -88,7 +88,7 @@ public class Callback<ResultType> {
         }
     }
 
-    public func cancel() {
+    internal func cleanup() {
         mutex.sync {
             completeCallback = nil
             strongyfy = nil
@@ -139,8 +139,8 @@ public class Callback<ResultType> {
                 }
             }
         }, stop: { _ in
-            self.cancel()
-            lazy.cachedCallback?.cancel()
+            self.cleanup()
+            lazy.cachedCallback?.cleanup()
         })
     }
 
@@ -161,8 +161,8 @@ public class Callback<ResultType> {
                 actual.complete(result)
             }
         }, stop: { _ in
-            original.cancel()
-            lazy.cachedCallback?.cancel()
+            original.cleanup()
+            lazy.cachedCallback?.cleanup()
         }).oneWay()
     }
 
@@ -388,8 +388,8 @@ public func zip<ResponseA, ResponseB>(_ lhs: Callback<ResponseA>,
     }
 
     let stopTask: Callback<(ResponseA, ResponseB)>.ServiceClosure = { _ in
-        lhs.cancel()
-        rhs.cancel()
+        lhs.cleanup()
+        rhs.cleanup()
     }
 
     return .init(start: startTask,
@@ -432,7 +432,7 @@ public func zip<Response>(_ input: [Callback<Response>]) -> Callback<[Response]>
     }
 
     let stopTask: Callback<[Response]>.ServiceClosure = { _ in
-        array.forEach { $0.cancel() }
+        array.forEach { $0.cleanup() }
         array.removeAll()
     }
 
@@ -462,7 +462,7 @@ public func zip<ResponseA, ResponseB, Error: Swift.Error>(_ lhs: ResultCallback<
                     break
                 case .failure(let e):
                     original?.complete(e)
-                    rhs?.cancel()
+                    rhs?.cleanup()
                 }
             } else if let b = b {
                 switch b {
@@ -470,7 +470,7 @@ public func zip<ResponseA, ResponseB, Error: Swift.Error>(_ lhs: ResultCallback<
                     break
                 case .failure(let e):
                     original?.complete(e)
-                    lhs?.cancel()
+                    lhs?.cleanup()
                 }
             }
         }
@@ -487,8 +487,8 @@ public func zip<ResponseA, ResponseB, Error: Swift.Error>(_ lhs: ResultCallback<
     }
 
     let stopTask: ResultCallback<(ResponseA, ResponseB), Error>.ServiceClosure = { _ in
-        lhs.cancel()
-        rhs.cancel()
+        lhs.cleanup()
+        rhs.cleanup()
     }
 
     return .init(start: startTask,

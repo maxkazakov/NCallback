@@ -70,12 +70,12 @@ class PendingCallbackSpec: QuickSpec {
 
                     context("cancel") {
                         beforeEach {
-                            callback.stub(.cancel).andReturn()
+                            callback.stub(.cleanup).andReturn()
                             subject.cancel()
                         }
 
                         it("should cancel cached callback") {
-                            expect(callback).to(haveReceived(.cancel))
+                            expect(callback).to(haveReceived(.cleanup))
                         }
 
                         it("should be clear") {

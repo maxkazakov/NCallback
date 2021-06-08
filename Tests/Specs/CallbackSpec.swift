@@ -398,7 +398,7 @@ class CallbackSpec: QuickSpec {
 
                         context("when canceled") {
                             beforeEach {
-                                subject.cancel()
+                                subject.cleanup()
                             }
 
                             it("should call stop on deinit") {
@@ -410,7 +410,7 @@ class CallbackSpec: QuickSpec {
                             weak var saved: Callback<Int>?
 
                             beforeEach {
-                                subject.cancel()
+                                subject.cleanup()
                                 subject.onComplete(options: .selfRetained, { _ in  })
 
                                 saved = subject
@@ -581,10 +581,10 @@ class CallbackSpec: QuickSpec {
 
                                 context("when both are completed") {
                                     beforeEach {
-                                        wrapper.value.cancel()
+                                        wrapper.value.cleanup()
                                         wrapper.value = nil
 
-                                        wrapper2.value.cancel()
+                                        wrapper2.value.cleanup()
                                         wrapper2.value = nil
                                     }
 
@@ -620,10 +620,10 @@ class CallbackSpec: QuickSpec {
 
                                 context("when both are completed") {
                                     beforeEach {
-                                        wrapper.value.cancel()
+                                        wrapper.value.cleanup()
                                         wrapper.value = nil
 
-                                        wrapper2.value.cancel()
+                                        wrapper2.value.cleanup()
                                         wrapper2.value = nil
                                     }
 
@@ -976,10 +976,10 @@ class CallbackSpec: QuickSpec {
 
                                 context("when both are completed") {
                                     beforeEach {
-                                        wrapper.value.cancel()
+                                        wrapper.value.cleanup()
                                         wrapper.value = nil
 
-                                        wrapper2.value.cancel()
+                                        wrapper2.value.cleanup()
                                         wrapper2.value = nil
                                     }
 
@@ -1016,10 +1016,10 @@ class CallbackSpec: QuickSpec {
 
                                 context("when both are completed") {
                                     beforeEach {
-                                        wrapper.value.cancel()
+                                        wrapper.value.cleanup()
                                         wrapper.value = nil
 
-                                        wrapper2.value.cancel()
+                                        wrapper2.value.cleanup()
                                         wrapper2.value = nil
                                     }
 
@@ -1094,10 +1094,10 @@ class CallbackSpec: QuickSpec {
 
                                     context("when both are completed") {
                                         beforeEach {
-                                            wrapper.value.cancel()
+                                            wrapper.value.cleanup()
                                             wrapper.value = nil
 
-                                            wrapper2.value.cancel()
+                                            wrapper2.value.cleanup()
                                             wrapper2.value = nil
                                         }
 
@@ -1136,10 +1136,10 @@ class CallbackSpec: QuickSpec {
 
                                     context("when both are completed") {
                                         beforeEach {
-                                            wrapper.value.cancel()
+                                            wrapper.value.cleanup()
                                             wrapper.value = nil
 
-                                            wrapper2.value.cancel()
+                                            wrapper2.value.cleanup()
                                             wrapper2.value = nil
                                         }
 

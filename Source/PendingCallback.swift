@@ -16,7 +16,7 @@ public class PendingCallback<ResultType> {
     private let mutex: Mutexing = Mutex.unfair
 
     public var isPending: Bool {
-        cached != nil
+        return cached != nil
     }
 
     public init() {
@@ -71,7 +71,6 @@ public class PendingCallback<ResultType> {
     }
 
     public func cancel() {
-        cached?.cancel()
         cached = nil
     }
 
