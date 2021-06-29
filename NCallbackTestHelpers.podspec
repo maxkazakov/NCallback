@@ -16,7 +16,7 @@ Pod::Spec.new do |spec|
     spec.resources = ['TestHelpers/**/*.{storyboard,xib,xcassets,json,imageset,png,strings,stringsdict}']
     spec.source_files  = 'TestHelpers/**/*.swift'
 
-    spec.dependency 'Spry'
+    spec.dependency 'NSpry'
     spec.dependency 'NCallback'
     spec.dependency 'NQueue'
     spec.dependency 'NQueueTestHelpers'
@@ -32,8 +32,7 @@ Pod::Spec.new do |spec|
 
         tests.dependency 'Nimble'
         tests.dependency 'Quick'
-        tests.dependency 'Spry+Nimble'
-
+        
         tests.frameworks = 'XCTest', 'Foundation'
 
         tests.source_files = 'Tests/Specs/**/*.swift'
