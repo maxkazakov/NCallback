@@ -5,10 +5,10 @@ import Spry
 
 extension Ignorable: SpryEquatable {
     static func testMake() -> Self {
-        .init()
+        return .init()
     }
 
     static func testMake<T>(_: T) -> Self {
-        .init()
+        return .init()
     }
 }
