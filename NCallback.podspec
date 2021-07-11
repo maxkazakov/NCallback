@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
     spec.name         = "NCallback"
-    spec.version      = "1.0.0"
+    spec.version      = "2.1.2"
     spec.summary      = "NCallback - wrapped closures"
 
     spec.source       = { :git => "git@github.com:NikSativa/NCallback.git" }
@@ -17,6 +17,5 @@ Pod::Spec.new do |spec|
 
     spec.dependency 'NQueue'
 
-    spec.resources = ['Source/**/*.{storyboard,xib,xcassets,json,imageset,png,strings,stringsdict}']
-    spec.source_files  = 'Source/**/*.swift'
+    spec.source_files = 'Source/**/*.swift'
 end

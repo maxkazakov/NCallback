@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
     spec.name         = "NCallbackTestHelpers"
-    spec.version      = "1.0.0"
+    spec.version      = "2.1.2"
     spec.summary      = "NCallback - wrapped closures"
 
     spec.source       = { :git => "git@github.com:NikSativa/NCallback.git" }
@@ -13,10 +13,9 @@ Pod::Spec.new do |spec|
     spec.ios.deployment_target = "10.0"
     spec.swift_version = '5.0'
 
-    spec.resources = ['TestHelpers/**/*.{storyboard,xib,xcassets,json,imageset,png,strings,stringsdict}']
-    spec.source_files  = 'TestHelpers/**/*.swift'
+    spec.source_files = 'TestHelpers/**/*.swift'
 
-    spec.dependency 'Spry'
+    spec.dependency 'NSpry'
     spec.dependency 'NCallback'
     spec.dependency 'NQueue'
     spec.dependency 'NQueueTestHelpers'
@@ -32,8 +31,7 @@ Pod::Spec.new do |spec|
 
         tests.dependency 'Nimble'
         tests.dependency 'Quick'
-        tests.dependency 'Spry+Nimble'
-
+        
         tests.frameworks = 'XCTest', 'Foundation'
 
         tests.source_files = 'Tests/Specs/**/*.swift'

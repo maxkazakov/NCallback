@@ -3,7 +3,7 @@ import UIKit
 
 import Quick
 import Nimble
-import Spry
+import NSpry
 
 @testable import NCallback
 @testable import NCallbackTestHelpers
