@@ -6,8 +6,8 @@
         "repositoryURL": "https://github.com/mattgallagher/CwlCatchException.git",
         "state": {
           "branch": null,
-          "revision": "f809deb30dc5c9d9b78c872e553261a61177721a",
-          "version": "2.0.0"
+          "revision": "682841464136f8c66e04afe5dbd01ab51a3a56f2",
+          "version": "2.1.0"
         }
       },
       {
@@ -24,8 +24,8 @@
         "repositoryURL": "https://github.com/Quick/Nimble.git",
         "state": {
           "branch": null,
-          "revision": "e491a6731307bb23783bf664d003be9b2fa59ab5",
-          "version": "9.0.0"
+          "revision": "af1730dde4e6c0d45bf01b99f8a41713ce536790",
+          "version": "9.2.0"
         }
       },
       {
@@ -33,7 +33,16 @@
         "repositoryURL": "git@github.com:NikSativa/NQueue.git",
         "state": {
           "branch": null,
-          "revision": "665f7e29183388fa499c30c3d48a9ef32a6a1277",
+          "revision": "85114e1ef934f5662b8dce7175ebe1cd177af088",
+          "version": "1.1.0"
+        }
+      },
+      {
+        "package": "NSpry",
+        "repositoryURL": "git@github.com:NikSativa/NSpry.git",
+        "state": {
+          "branch": null,
+          "revision": "9149ea0a0f6f2e3853fc043ca78f9ba976cec232",
           "version": "1.0.1"
         }
       },
@@ -44,15 +53,6 @@
           "branch": null,
           "revision": "8cce6acd38f965f5baa3167b939f86500314022b",
           "version": "3.1.2"
-        }
-      },
-      {
-        "package": "Spry",
-        "repositoryURL": "https://github.com/NikSativa/Spry.git",
-        "state": {
-          "branch": null,
-          "revision": "c8a2894b3e1f97b3b9a7d726a05320673b864337",
-          "version": "3.4.3"
         }
       }
     ]
