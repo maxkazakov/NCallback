@@ -1,5 +1,4 @@
-// swift-tools-version:5.3
-// The swift-tools-version declares the minimum version of Swift required to build this package.
+// swift-tools-version:5.4
 
 import PackageDescription
 
@@ -13,7 +12,7 @@ let package = Package(
         .library(name: "NCallbackTestHelpers", targets: ["NCallbackTestHelpers"])
     ],
     dependencies: [
-        .package(url: "https://github.com/Quick/Quick.git", .upToNextMajor(from: "3.1.2")),
+        .package(url: "https://github.com/Quick/Quick.git", .upToNextMajor(from: "4.0.0")),
         .package(url: "https://github.com/Quick/Nimble.git", .upToNextMajor(from: "9.0.0")),
         .package(url: "git@github.com:NikSativa/NQueue.git", .upToNextMajor(from: "1.0.0")),
         .package(url: "git@github.com:NikSativa/NSpry.git", .upToNextMajor(from: "1.0.0"))
