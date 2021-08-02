@@ -35,7 +35,7 @@ let package = Package(
                                    "NSpry",
                                    "Nimble",
                                    "Quick"],
-                    path: "Tests/Specs")
+                    path: "Tests")
     ],
     swiftLanguageVersions: [.v5]
 )

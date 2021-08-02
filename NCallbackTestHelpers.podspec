@@ -34,6 +34,6 @@ Pod::Spec.new do |spec|
         
         tests.frameworks = 'XCTest', 'Foundation'
 
-        tests.source_files = 'Tests/Specs/**/*.swift'
+        tests.source_files = 'Tests/**/*.swift'
     end
 end
