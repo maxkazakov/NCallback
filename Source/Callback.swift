@@ -19,12 +19,12 @@ public enum CallbackOption: Equatable {
 
 public typealias ResultCallback<Response, Error: Swift.Error> = Callback<Result<Response, Error>>
 
-public struct CallbackTimeout {
+public struct CallbackTimeout<ResultType> {
     public let seconds: Double
-    public let callback: () -> Void
+    public let callback: (Callback<ResultType>) -> Void
 
     public init(seconds: Double,
-                callback: @escaping () -> Void) {
+                callback: @escaping (Callback<ResultType>) -> Void) {
         assert(seconds > 0, "timeout must be greater than zero")
         self.seconds = seconds
         self.callback = callback
@@ -129,7 +129,7 @@ public class Callback<ResultType> {
     }
 
     public func onSyncedComplete(options: CallbackOption = .default,
-                                 timeout: CallbackTimeout? = nil,
+                                 timeout: CallbackTimeout<ResultType>? = nil,
                                  _ callback: Completion) {
         let semaphore = DispatchSemaphore(value: 0)
         var result: ResultType!
@@ -145,7 +145,7 @@ public class Callback<ResultType> {
             case .success:
                 callback(result)
             case .timedOut:
-                timeout.callback()
+                timeout.callback(self)
             }
         } else {
             semaphore.wait()
