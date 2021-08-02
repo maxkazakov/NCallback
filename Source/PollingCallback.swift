@@ -5,8 +5,7 @@ private let defaultScheduleQueue: Queueable = Queue.custom(label: "PollingCallba
                                                            qos: .utility,
                                                            attributes: .concurrent)
 
-final
-class PollingCallback<Response, Error: Swift.Error> {
+final class PollingCallback<Response, Error: Swift.Error> {
     typealias ResultType = Result<Response, Error>
 
     private let generator: () -> Callback<ResultType>

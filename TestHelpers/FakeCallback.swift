@@ -7,8 +7,7 @@ import NQueue
 
 typealias FakeResultCallback<Response, Error: Swift.Error> = FakeCallback<Result<Response, Error>>
 
-final
-class FakeCallback<ResultType>: Callback<ResultType>, Spryable {
+final class FakeCallback<ResultType>: Callback<ResultType>, Spryable {
     enum ClassFunction: String, StringRepresentable {
         case success = "success(_:)"
         case failure = "failure(_:)"
