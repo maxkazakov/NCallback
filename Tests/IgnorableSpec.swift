@@ -8,7 +8,7 @@ import NSpry
 @testable import NCallback
 @testable import NCallbackTestHelpers
 
-class IgnorableSpec: QuickSpec {
+final class IgnorableSpec: QuickSpec {
     override func spec() {
         describe("Ignorable") {
             it("should make instance from empty init") {

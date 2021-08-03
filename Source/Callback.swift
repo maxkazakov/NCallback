@@ -19,24 +19,12 @@ public enum CallbackOption: Equatable {
 
 public typealias ResultCallback<Response, Error: Swift.Error> = Callback<Result<Response, Error>>
 
-public struct CallbackTimeout<ResultType> {
-    public let seconds: Double
-    public let callback: (Callback<ResultType>) -> Void
-
-    public init(seconds: Double,
-                callback: @escaping (Callback<ResultType>) -> Void) {
-        assert(seconds > 0, "timeout must be greater than zero")
-        self.seconds = seconds
-        self.callback = callback
-    }
-}
-
 public class Callback<ResultType> {
     public typealias Completion = (_ result: ResultType) -> Void
     public typealias ServiceClosure = (Callback) -> Void
 
-    private let start: (Callback<ResultType>) -> Void
-    private let stop: (Callback<ResultType>) -> Void
+    private let start: ServiceClosure
+    private let stop: ServiceClosure
     private var beforeCallback: Completion?
     private var completeCallback: Completion?
     private var deferredCallback: Completion?
@@ -128,31 +116,6 @@ public class Callback<ResultType> {
         start(self)
     }
 
-    public func onSyncedComplete(options: CallbackOption = .default,
-                                 timeout: CallbackTimeout<ResultType>? = nil,
-                                 _ callback: Completion) {
-        let semaphore = DispatchSemaphore(value: 0)
-        var result: ResultType!
-
-        onComplete(options: options) {
-            result = $0
-            semaphore.signal()
-        }
-
-        if let timeout = timeout {
-            let timeoutResult = semaphore.wait(timeout: .now() + timeout.seconds)
-            switch timeoutResult {
-            case .success:
-                callback(result)
-            case .timedOut:
-                timeout.callback(self)
-            }
-        } else {
-            semaphore.wait()
-            callback(result)
-        }
-    }
-
     public func andThen<T>(_ waiter: @escaping (ResultType) -> Callback<T>) -> Callback<(ResultType, T)> {
         let lazy = LazyGenerator(generator: waiter)
         return .init(start: { actual in
@@ -192,14 +155,6 @@ public class Callback<ResultType> {
 
     public func oneWay(options: CallbackOption = .default) {
         onComplete(options: options, { _ in })
-    }
-
-    public func oneWaySynced(options: CallbackOption = .default) {
-        let semaphore = DispatchSemaphore(value: 0)
-        onComplete(options: options, { _ in
-            semaphore.signal()
-        })
-        semaphore.wait()
     }
 
     // MARK: - queueing
@@ -384,139 +339,6 @@ extension Callback: Hashable {
             return lhs === rhs
         }
     }
-}
-
-// MARK: - zip
-public func zip<ResponseA, ResponseB>(_ lhs: Callback<ResponseA>,
-                                      _ rhs: Callback<ResponseB>) -> Callback<(ResponseA, ResponseB)> {
-    let startTask: Callback<(ResponseA, ResponseB)>.ServiceClosure = { original in
-        var a: ResponseA?
-        var b: ResponseB?
-
-        let check = { [weak original] in
-            if let a = a, let b = b {
-                let result = (a, b)
-                original?.complete(result)
-            }
-        }
-
-        lhs.onComplete(options: .weakness) { result in
-            a = result
-            check()
-        }
-
-        rhs.onComplete(options: .weakness) { result in
-            b = result
-            check()
-        }
-    }
-
-    let stopTask: Callback<(ResponseA, ResponseB)>.ServiceClosure = { _ in
-        lhs.cleanup()
-        rhs.cleanup()
-    }
-
-    return .init(start: startTask,
-                 stop: stopTask)
-}
-
-private enum State<R> {
-    case pending
-    case value(R)
-}
-
-public func zip<Response>(_ input: [Callback<Response>]) -> Callback<[Response]> {
-    if input.isEmpty {
-        return .init(result: [])
-    }
-
-    var array = input
-    var result: [State<Response>] = Array(repeating: .pending, count: array.count)
-    let startTask: Callback<[Response]>.ServiceClosure = { original in
-        for info in array.enumerated() {
-            let offset = info.offset
-            info.element.onComplete(options: .weakness) { [weak original] response in
-                result.insert(.value(response), at: offset)
-
-                let actual: [Response] = result.compactMap {
-                    switch $0 {
-                    case .pending:
-                        return nil
-                    case .value(let r):
-                        return r
-                    }
-                }
-
-                if array.count == actual.count {
-                    original?.complete(actual)
-                    array.removeAll()
-                }
-            }
-        }
-    }
-
-    let stopTask: Callback<[Response]>.ServiceClosure = { _ in
-        array.forEach { $0.cleanup() }
-        array.removeAll()
-    }
-
-    return .init(start: startTask,
-                 stop: stopTask)
-}
-
-public func zip<ResponseA, ResponseB, Error: Swift.Error>(_ lhs: ResultCallback<ResponseA, Error>,
-                                                          _ rhs: ResultCallback<ResponseB, Error>) -> ResultCallback<(ResponseA, ResponseB), Error>  {
-    let startTask: ResultCallback<(ResponseA, ResponseB), Error>.ServiceClosure = { original in
-        var a: Result<ResponseA, Error>?
-        var b: Result<ResponseB, Error>?
-
-        let check = { [weak lhs, weak rhs, weak original] in
-            if let a = a, let b = b {
-                switch (a, b) {
-                case (.success(let a), .success(let b)):
-                    let result: (ResponseA, ResponseB) = (a, b)
-                    original?.complete(result)
-                case (.failure(let a), _),
-                     (_, .failure(let a)):
-                    original?.complete(a)
-                }
-            } else if let a = a {
-                switch a {
-                case .success:
-                    break
-                case .failure(let e):
-                    original?.complete(e)
-                    rhs?.cleanup()
-                }
-            } else if let b = b {
-                switch b {
-                case .success:
-                    break
-                case .failure(let e):
-                    original?.complete(e)
-                    lhs?.cleanup()
-                }
-            }
-        }
-
-        lhs.onComplete(options: .weakness) { result in
-            a = result
-            check()
-        }
-
-        rhs.onComplete(options: .weakness) { result in
-            b = result
-            check()
-        }
-    }
-
-    let stopTask: ResultCallback<(ResponseA, ResponseB), Error>.ServiceClosure = { _ in
-        lhs.cleanup()
-        rhs.cleanup()
-    }
-
-    return .init(start: startTask,
-                 stop: stopTask)
 }
 
 private final class LazyGenerator<In, Out> {

@@ -8,7 +8,7 @@ import NSpry
 @testable import NCallback
 @testable import NCallbackTestHelpers
 
-class PendingCallbackSpec: QuickSpec {
+final class PendingCallbackSpec: QuickSpec {
     private enum Constant {
         static let sharedBehavior = "PendingCallback Behavior"
         static let sharedInitialState = "PendingCallback Initial State"

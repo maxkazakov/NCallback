@@ -49,7 +49,7 @@ private final class SubjectWrapper<Value> {
     }
 }
 
-class CallbackSpec: QuickSpec {
+final class CallbackSpec: QuickSpec {
     override func spec() {
         describe("Callback") {
             describe("Simple Callback") {

@@ -16,7 +16,7 @@ public extension Callback {
     }
 
     func mapIgnorable<T, Error: Swift.Error>() -> ResultCallback<Ignorable, Error> where ResultType == Result<T, Error> {
-        map(Ignorable.init)
+        return map(Ignorable.init)
     }
 
     func completeSuccessfully<Error: Swift.Error>() where ResultType == Result<Ignorable, Error> {
@@ -29,15 +29,6 @@ public extension Callback {
 
     func onComplete(options: CallbackOption = .default, _ callback: @escaping () -> Void) where ResultType == Ignorable {
         onComplete(options: options) { _ in
-            callback()
-        }
-    }
-
-    func onSyncedComplete(options: CallbackOption = .default,
-                          timeout: CallbackTimeout<ResultType>? = nil,
-                          _ callback: () -> Void) where ResultType == Ignorable {
-        onSyncedComplete(options: options,
-                         timeout: timeout) { _ in
             callback()
         }
     }

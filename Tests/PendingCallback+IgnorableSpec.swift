@@ -8,7 +8,7 @@ import NSpry
 @testable import NCallback
 @testable import NCallbackTestHelpers
 
-class PendingCallback_IgnorableSpec: QuickSpec {
+final class PendingCallback_IgnorableSpec: QuickSpec {
     private enum TestError: Error {
         case case1
         case case2
