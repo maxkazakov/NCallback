@@ -186,6 +186,16 @@ public class Callback<ResultType> {
         return copy
     }
 
+    public func map<NewResponse, Response, Error: Swift.Error>(_ mapper: @escaping (Response) -> NewResponse) -> ResultCallback<NewResponse, Error>
+    where ResultType == Result<Response, Error> {
+        return flatMap { return $0.map(mapper) }
+    }
+
+    public func mapError<Response, Error: Swift.Error, NewError: Swift.Error>(_ mapper: @escaping (Error) -> NewError) -> ResultCallback<Response, NewError>
+    where ResultType == Result<Response, Error> {
+        return flatMap { return $0.mapError(mapper) }
+    }
+
     // MARK: - defer
     @discardableResult
     public func deferred(_ callback: @escaping Completion) -> Callback<ResultType> {
@@ -214,22 +224,24 @@ public class Callback<ResultType> {
     }
 
     // MARK: - ResultCallback
+    func validate<Response, Error>(_ mapper: @escaping (Response) -> ResultType) -> Callback<ResultType>
+    where ResultType == Result<Response, Error>, Error: Swift.Error {
+        return flatMap {
+            switch $0 {
+            case .success(let value):
+                return mapper(value)
+            case .failure(let error):
+                return .failure(error)
+            }
+        }
+    }
+
     public func complete<Response, Error: Swift.Error>(_ response: Response) where ResultType == Result<Response, Error> {
         complete(.success(response))
     }
 
     public func complete<Response, Error: Swift.Error>(_ error: Error) where ResultType == Result<Response, Error> {
         complete(.failure(error))
-    }
-
-    public func map<NewResponse, Response, Error: Swift.Error>(_ mapper: @escaping (Response) -> NewResponse) -> ResultCallback<NewResponse, Error>
-    where ResultType == Result<Response, Error> {
-        return flatMap { return $0.map(mapper) }
-    }
-
-    public func mapError<Response, Error: Swift.Error, NewError: Swift.Error>(_ mapper: @escaping (Error) -> NewError) -> ResultCallback<Response, NewError>
-    where ResultType == Result<Response, Error> {
-        return flatMap { return $0.mapError(mapper) }
     }
 
     public func recover<Response, Error: Swift.Error>(_ mapper: @escaping (Error) -> Response) -> Callback<Response>

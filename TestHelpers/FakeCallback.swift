@@ -90,12 +90,12 @@ final class FakeCallback<ResultType>: Callback<ResultType>, Spryable {
 
     override static func success<Response, Error>(_ result: @escaping @autoclosure () -> Response) -> ResultCallback<Response, Error>
     where ResultType == Result<Response, Error> {
-        return spryify(arguments: result())
+        return spryify(arguments: result)
     }
 
     override static func failure<Response, Error>(_ result: @escaping @autoclosure () -> Error) -> ResultCallback<Response, Error>
     where ResultType == Result<Response, Error> {
-        return spryify(arguments: result())
+        return spryify(arguments: result)
     }
 
     override func polling<Response, Error>(scheduleQueue: Queueable? = nil,
