@@ -3,7 +3,7 @@ import Foundation
 @discardableResult
 public func sync<T>(_ callback: Callback<T>,
                     seconds: Double? = nil,
-                    timeout: @autoclosure () -> T) -> T {
+                    timeoutResult timeout: @autoclosure () -> T) -> T {
     let semaphore = DispatchSemaphore(value: 0)
     var result: T!
 

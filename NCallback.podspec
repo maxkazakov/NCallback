@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
     spec.name         = "NCallback"
-    spec.version      = "2.4.0"
+    spec.version      = "2.4.2"
     spec.summary      = "NCallback - wrapped closures"
 
     spec.source       = { :git => "git@github.com:NikSativa/NCallback.git" }
