@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
     spec.name         = "NCallbackTestHelpers"
-    spec.version      = "2.4.2"
+    spec.version      = "2.5.0"
     spec.summary      = "NCallback - wrapped closures"
 
     spec.source       = { :git => "git@github.com:NikSativa/NCallback.git" }
@@ -27,8 +27,6 @@ Pod::Spec.new do |spec|
     }
 
     spec.test_spec 'Tests' do |tests|
-        #        tests.requires_app_host = true
-
         tests.dependency 'Nimble'
         tests.dependency 'Quick'
         

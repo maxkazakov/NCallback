@@ -18,8 +18,8 @@ final class PendingCallback_IgnorableSpec: QuickSpec {
         describe("PendingCallback+Ignorable") {
             describe("Simple PendingCallback") {
                 describe("complete") {
-                    var subject: PendingCallback<Ignorable>!
-                    var result: [Ignorable]!
+                    var subject: PendingCallback<Int>!
+                    var result: [Int]!
 
                     beforeEach {
                         result = []
@@ -32,19 +32,19 @@ final class PendingCallback_IgnorableSpec: QuickSpec {
                             }
                         }
 
-                        subject.complete()
+                        subject.complete(1)
                     }
 
                     it("should receive result") {
-                        expect(result) == .init(repeating: .testMake(), count: 5)
+                        expect(result) == .init(repeating: 1, count: 5)
                     }
                 }
             }
 
             describe("PendingResultCallback") {
                 describe("completeSuccessfully") {
-                    var subject: PendingResultCallback<Ignorable, TestError>!
-                    var result: [Result<Ignorable, TestError>]!
+                    var subject: PendingResultCallback<Void, TestError>!
+                    var result: [Result<Void, TestError>]!
 
                     beforeEach {
                         result = []
@@ -61,13 +61,13 @@ final class PendingCallback_IgnorableSpec: QuickSpec {
                     }
 
                     it("should receive result") {
-                        expect(result) == .init(repeating: .success(.testMake()), count: 5)
+                        expect(result.compactMap({ try? $0.get() }).count) == 5
                     }
                 }
 
                 describe("complete with error") {
-                    var subject: PendingResultCallback<Ignorable, TestError>!
-                    var result: [Result<Ignorable, TestError>]!
+                    var subject: PendingResultCallback<Int, TestError>!
+                    var result: [Result<Int, TestError>]!
 
                     beforeEach {
                         result = []

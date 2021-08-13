@@ -51,7 +51,7 @@ private final class SubjectWrapper<Value> {
 
 final class CallbackSpec: QuickSpec {
     override func spec() {
-        describe("Callback") {
+        fdescribe("Callback") {
             describe("Simple Callback") {
                 var wrapper: SubjectWrapper<Int>!
                 var subject: Callback<Int>! {
@@ -636,6 +636,15 @@ final class CallbackSpec: QuickSpec {
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+
+                describe("empty zip array") {
+                    it("should return empty array") {
+                        let array: [Callback<[Int]>] = []
+                        zip(array).onComplete {
+                            expect($0).to(beEmpty())
                         }
                     }
                 }
@@ -1736,26 +1745,6 @@ final class CallbackSpec: QuickSpec {
                     }
                 }
             }
-        }
-    }
-}
-
-private extension Result {
-    var error: Failure? {
-        switch self {
-        case .success:
-            return nil
-        case .failure(let e):
-            return e
-        }
-    }
-
-    var value: Success? {
-        switch self {
-        case .success(let v):
-            return v
-        case .failure:
-            return nil
         }
     }
 }

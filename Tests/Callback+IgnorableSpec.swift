@@ -18,8 +18,8 @@ final class Callback_IgnorableSpec: QuickSpec {
         describe("Callback+Ignorable") {
             describe("Simple Callback") {
                 describe("complete") {
-                    var subject: Callback<Ignorable>!
-                    var result: Ignorable!
+                    var subject: Callback<Void>!
+                    var result: Void!
 
                     beforeEach {
                         subject = .init()
@@ -37,8 +37,8 @@ final class Callback_IgnorableSpec: QuickSpec {
 
                 describe("complete") {
                     var subject: Callback<Int>!
-                    var mapped: Callback<Ignorable>!
-                    var mappedResult: Ignorable!
+                    var mapped: Callback<Void>!
+                    var mappedResult: Void!
                     var result: Int!
 
                     beforeEach {
@@ -47,7 +47,7 @@ final class Callback_IgnorableSpec: QuickSpec {
                             result = $0
                         }
 
-                        mapped = subject.flatMapIgnorable()
+                        mapped = subject.flatMapVoid()
                         mapped.onComplete {
                             mappedResult = $0
                         }
@@ -64,8 +64,8 @@ final class Callback_IgnorableSpec: QuickSpec {
 
             describe("ResultCallback") {
                 describe("complete") {
-                    var subject: ResultCallback<Ignorable, TestError>!
-                    var result: Result<Ignorable, TestError>!
+                    var subject: ResultCallback<Void, TestError>!
+                    var result: Result<Void, TestError>!
 
                     beforeEach {
                         subject = .init()
@@ -77,14 +77,14 @@ final class Callback_IgnorableSpec: QuickSpec {
                     }
 
                     it("should receive result") {
-                        expect(result) == .success(.testMake())
+                        expect(result.value).toNot(beNil())
                     }
                 }
 
                 describe("complete") {
                     var subject: ResultCallback<Int, TestError>!
-                    var mapped: ResultCallback<Ignorable, TestError>!
-                    var mappedResult: Result<Ignorable, TestError>!
+                    var mapped: ResultCallback<Void, TestError>!
+                    var mappedResult: Result<Void, TestError>!
                     var result: Result<Int, TestError>!
 
                     beforeEach {
@@ -93,7 +93,7 @@ final class Callback_IgnorableSpec: QuickSpec {
                             result = $0
                         }
 
-                        mapped = subject.mapIgnorable()
+                        mapped = subject.mapVoid()
                         mapped.onComplete {
                             mappedResult = $0
                         }
@@ -106,7 +106,7 @@ final class Callback_IgnorableSpec: QuickSpec {
 
                         it("should receive result") {
                             expect(result) == .success(1)
-                            expect(mappedResult) == .success(.testMake())
+                            expect(result.value).toNot(beNil())
                         }
                     }
 
@@ -117,7 +117,7 @@ final class Callback_IgnorableSpec: QuickSpec {
 
                         it("should receive result") {
                             expect(result) == .failure(.case1)
-                            expect(mappedResult) == .failure(.case1)
+                            expect(mappedResult.error) == .case1
                         }
                     }
                 }
