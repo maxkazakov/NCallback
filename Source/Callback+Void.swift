@@ -6,17 +6,19 @@ private func makeVoid() -> Void {
 private func makeVoid<T>(_: T) -> Void {
 }
 
-public extension Callback where ResultType == Void {
-    func complete() {
+public extension Callback {
+    func complete() where ResultType == Void {
         complete(makeVoid())
     }
 
-    class func success() -> Callback<Void> {
+    class func success() -> Callback<Void> where ResultType == Void {
         return .init(result: makeVoid())
     }
-}
 
-public extension Callback {
+    class func success<T, Error: Swift.Error>() -> ResultCallback<Void, Error> where ResultType == Result<T, Error> {
+        return .success(makeVoid())
+    }
+
     func flatMapVoid() -> Callback<Void> {
         return flatMap(makeVoid)
     }
@@ -27,10 +29,6 @@ public extension Callback {
 
     func completeSuccessfully<Error: Swift.Error>() where ResultType == Result<Void, Error> {
         complete(.success(makeVoid()))
-    }
-
-    class func success<Error>() -> ResultCallback<Void, Error> {
-        return .success(makeVoid())
     }
 
     func onComplete(options: CallbackOption = .default, _ callback: @escaping () -> Void) where ResultType == Void {
