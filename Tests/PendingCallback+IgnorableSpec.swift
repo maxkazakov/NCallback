@@ -8,14 +8,14 @@ import NSpry
 @testable import NCallback
 @testable import NCallbackTestHelpers
 
-final class PendingCallback_IgnorableSpec: QuickSpec {
+final class PendingCallback_VoidSpec: QuickSpec {
     private enum TestError: Error {
         case case1
         case case2
     }
 
     override func spec() {
-        describe("PendingCallback+Ignorable") {
+        describe("PendingCallback+Void") {
             describe("Simple PendingCallback") {
                 describe("complete") {
                     var subject: PendingCallback<Int>!
