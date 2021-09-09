@@ -14,7 +14,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/Quick/Quick.git", .upToNextMajor(from: "4.0.0")),
         .package(url: "https://github.com/Quick/Nimble.git", .upToNextMajor(from: "9.0.0")),
-        .package(url: "git@github.com:NikSativa/NQueue.git", .upToNextMajor(from: "1.0.0")),
+        .package(url: "git@github.com:maxkazakov/NQueue.git", .branch("spm_dymanic_library")),
         .package(url: "git@github.com:NikSativa/NSpry.git", .upToNextMajor(from: "1.0.0"))
     ],
     targets: [

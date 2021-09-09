@@ -30,11 +30,11 @@
       },
       {
         "package": "NQueue",
-        "repositoryURL": "git@github.com:NikSativa/NQueue.git",
+        "repositoryURL": "git@github.com:maxkazakov/NQueue.git",
         "state": {
-          "branch": null,
-          "revision": "85114e1ef934f5662b8dce7175ebe1cd177af088",
-          "version": "1.1.0"
+          "branch": "spm_dymanic_library",
+          "revision": "aab1a320db061aa1179512584a4b151826a54994",
+          "version": null
         }
       },
       {
