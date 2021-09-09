@@ -8,7 +8,7 @@ let package = Package(
         .iOS(.v10)
     ],
     products: [
-        .library(name: "NCallback", targets: ["NCallback"]),
+        .library(name: "NCallback", type: .dynamic, targets: ["NCallback"]),
         .library(name: "NCallbackTestHelpers", targets: ["NCallbackTestHelpers"])
     ],
     dependencies: [

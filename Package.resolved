@@ -38,15 +38,6 @@
         }
       },
       {
-        "package": "NSpry",
-        "repositoryURL": "git@github.com:NikSativa/NSpry.git",
-        "state": {
-          "branch": null,
-          "revision": "9149ea0a0f6f2e3853fc043ca78f9ba976cec232",
-          "version": "1.0.1"
-        }
-      },
-      {
         "package": "Quick",
         "repositoryURL": "https://github.com/Quick/Quick.git",
         "state": {
