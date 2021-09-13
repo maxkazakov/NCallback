@@ -31,7 +31,8 @@ public class Callback<ResultType> {
     private var strongyfy: Callback?
     private var options: CallbackOption = .default
     private var mutex: Mutexing = Mutex.pthread(.recursive)
-    private var queue: DelayedQueue = .absent
+    private var completionQueue: DelayedQueue = .absent
+    private var taskQueue: DelayedQueue = .absent
 
     public var hashKey: String?
 
@@ -64,7 +65,7 @@ public class Callback<ResultType> {
 
     // MARK: - completion
     public func complete(_ result: ResultType) {
-        queue.fire {
+        completionQueue.fire {
             typealias Callbacks = (before: Completion?, complete: Completion?, deferred: Completion?)
 
             let callbacks: Callbacks = self.mutex.sync {
@@ -113,7 +114,10 @@ public class Callback<ResultType> {
         }
 
         completeCallback = callback
-        start(self)
+
+        taskQueue.fire {
+            self.start(self)
+        }
     }
 
     public func andThen<T>(_ waiter: @escaping (ResultType) -> Callback<T>) -> Callback<(ResultType, T)> {
@@ -158,13 +162,23 @@ public class Callback<ResultType> {
     }
 
     // MARK: - queueing
-    public func schedule(in queue: Queueable) -> Self {
-        self.queue = .async(queue)
+    public func schedule(completionIn queue: Queueable) -> Self {
+        self.completionQueue = .async(queue)
         return self
     }
 
-    public func schedule(in queue: DelayedQueue) -> Self {
-        self.queue = queue
+    public func schedule(completionIn queue: DelayedQueue) -> Self {
+        self.completionQueue = queue
+        return self
+    }
+
+    public func schedule(taskIn queue: Queueable) -> Self {
+        self.taskQueue = .async(queue)
+        return self
+    }
+
+    public func schedule(taskIn queue: DelayedQueue) -> Self {
+        self.taskQueue = queue
         return self
     }
 

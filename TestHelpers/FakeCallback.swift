@@ -29,7 +29,8 @@ final class FakeCallback<ResultType>: Callback<ResultType>, Spryable {
         case mapError = "mapError(_:)"
 
         case polling = "polling(scheduleQueue:retryCount:idleTimeInterval:minimumWaitingTime:shouldRepeat:response:)"
-        case scheduleInQueue = "schedule(in:)"
+        case scheduleCompletionInQueue = "schedule(completionIn:)"
+        case scheduleTaskInQueue = "schedule(taskIn:)"
     }
 
     override func complete(_ result: ResultType) {
@@ -108,11 +109,19 @@ final class FakeCallback<ResultType>: Callback<ResultType>, Spryable {
         return spryify(arguments: scheduleQueue, retryCount, idleTimeInterval, minimumWaitingTime, shouldRepeat, response)
     }
 
-    override func schedule(in queue: DelayedQueue) -> Self {
+    override func schedule(completionIn queue: DelayedQueue) -> Self {
         return spryify(arguments: queue)
     }
 
-    override func schedule(in queue: Queueable) -> Self {
+    override func schedule(completionIn queue: Queueable) -> Self {
+        return spryify(arguments: queue)
+    }
+
+    override func schedule(taskIn queue: DelayedQueue) -> Self {
+        return spryify(arguments: queue)
+    }
+
+    override func schedule(taskIn queue: Queueable) -> Self {
         return spryify(arguments: queue)
     }
 }
