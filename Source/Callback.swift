@@ -163,22 +163,30 @@ public class Callback<ResultType> {
 
     // MARK: - queueing
     public func schedule(completionIn queue: Queueable) -> Self {
-        self.completionQueue = .async(queue)
+        mutex.sync {
+            self.completionQueue = .async(queue)
+        }
         return self
     }
 
     public func schedule(completionIn queue: DelayedQueue) -> Self {
-        self.completionQueue = queue
+        mutex.sync {
+            self.completionQueue = queue
+        }
         return self
     }
 
     public func schedule(taskIn queue: Queueable) -> Self {
-        self.taskQueue = .async(queue)
+        mutex.sync {
+            self.taskQueue = .async(queue)
+        }
         return self
     }
 
     public func schedule(taskIn queue: DelayedQueue) -> Self {
-        self.taskQueue = queue
+        mutex.sync {
+            self.taskQueue = queue
+        }
         return self
     }
 
