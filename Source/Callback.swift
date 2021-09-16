@@ -205,9 +205,27 @@ public class Callback<ResultType> {
         return flatMap { return $0.map(mapper) }
     }
 
+    public func tryMap<NewResponse, Response>(_ mapper: @escaping (Response) throws -> NewResponse) -> ResultCallback<NewResponse, Swift.Error>
+    where ResultType == Result<Response, Swift.Error> {
+        return flatMap {
+            do {
+                switch $0 {
+                case .success(let response):
+                    return .success(try mapper(response))
+                case .failure(let error):
+                    return .failure(error)
+                }
+            } catch let error {
+                return .failure(error)
+            }
+        }
+    }
+
     public func mapError<Response, Error: Swift.Error, NewError: Swift.Error>(_ mapper: @escaping (Error) -> NewError) -> ResultCallback<Response, NewError>
     where ResultType == Result<Response, Error> {
-        return flatMap { return $0.mapError(mapper) }
+        return flatMap {
+            return $0.mapError(mapper)
+        }
     }
 
     // MARK: - defer
