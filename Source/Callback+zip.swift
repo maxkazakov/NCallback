@@ -71,7 +71,7 @@ public func zip<Response>(_ input: [Callback<Response>]) -> Callback<[Response]>
 }
 
 public func zip<ResponseA, ResponseB, Error: Swift.Error>(_ lhs: ResultCallback<ResponseA, Error>,
-                                                          _ rhs: ResultCallback<ResponseB, Error>) -> ResultCallback<(ResponseA, ResponseB), Error>  {
+                                                          _ rhs: ResultCallback<ResponseB, Error>) -> ResultCallback<(ResponseA, ResponseB), Error> {
     let startTask: ResultCallback<(ResponseA, ResponseB), Error>.ServiceClosure = { original in
         var a: Result<ResponseA, Error>?
         var b: Result<ResponseB, Error>?
@@ -82,8 +82,8 @@ public func zip<ResponseA, ResponseB, Error: Swift.Error>(_ lhs: ResultCallback<
                 case (.success(let a), .success(let b)):
                     let result: (ResponseA, ResponseB) = (a, b)
                     original?.complete(result)
-                case (.failure(let a), _),
-                     (_, .failure(let a)):
+                case (_, .failure(let a)),
+                     (.failure(let a), _):
                     original?.complete(a)
                 }
             } else if let a = a {

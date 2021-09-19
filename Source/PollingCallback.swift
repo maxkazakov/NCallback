@@ -83,7 +83,7 @@ final class PollingCallback<Response, Error: Swift.Error> {
         new().onComplete(options: .repeatable(.weakness)) { [unowned self] result in
             self.response(result)
 
-            if self.canRepeat(retryCount) && self.shouldRepeat(result) {
+            if self.canRepeat(retryCount), self.shouldRepeat(result) {
                 self.schedulePolling(actual, retryCount: retryCount - 1)
             } else {
                 switch result {

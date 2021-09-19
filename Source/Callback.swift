@@ -64,6 +64,7 @@ public class Callback<ResultType> {
     }
 
     // MARK: - completion
+
     public func complete(_ result: ResultType) {
         completionQueue.fire {
             typealias Callbacks = (before: Completion?, complete: Completion?, deferred: Completion?)
@@ -158,10 +159,11 @@ public class Callback<ResultType> {
     }
 
     public func oneWay(options: CallbackOption = .default) {
-        onComplete(options: options, { _ in })
+        onComplete(options: options) { _ in }
     }
 
     // MARK: - queueing
+
     public func schedule(completionIn queue: Queueable) -> Self {
         mutex.sync {
             self.completionQueue = .async(queue)
@@ -191,6 +193,7 @@ public class Callback<ResultType> {
     }
 
     // MARK: - mapping
+
     public func flatMap<NewResultType>(_ mapper: @escaping (ResultType) -> NewResultType) -> Callback<NewResultType> {
         let copy = Callback<NewResultType>(start: { _ in self.start(self) },
                                            stop: { _ in self.stop(self) })
@@ -223,7 +226,7 @@ public class Callback<ResultType> {
                 case .failure(let error):
                     return .failure(error)
                 }
-            } catch let error {
+            } catch {
                 return .failure(error)
             }
         }
@@ -237,6 +240,7 @@ public class Callback<ResultType> {
     }
 
     // MARK: - defer
+
     @discardableResult
     public func deferred(_ callback: @escaping Completion) -> Callback<ResultType> {
         mutex.sync {
@@ -264,6 +268,7 @@ public class Callback<ResultType> {
     }
 
     // MARK: - ResultCallback
+
     func validate<Response, Error>(_ mapper: @escaping (Response) -> ResultType) -> Callback<ResultType>
     where ResultType == Result<Response, Error>, Error: Swift.Error {
         return flatMap {
@@ -335,14 +340,14 @@ public class Callback<ResultType> {
     public func filterNils<Response>() -> Callback<[Response]>
     where ResultType == [Response?] {
         return flatMap { result in
-            result.compactMap({ $0 })
+            result.compactMap { $0 }
         }
     }
 
     public func filterNils<Response, Error: Swift.Error>() -> ResultCallback<[Response], Error>
     where ResultType == Result<[Response?], Error> {
         return map { result in
-            result.compactMap({ $0 })
+            result.compactMap { $0 }
         }
     }
 
@@ -362,7 +367,7 @@ public class Callback<ResultType> {
                                          minimumWaitingTime: TimeInterval? = nil,
                                          shouldRepeat: @escaping (Result<Response, Error>) -> Bool = { _ in false },
                                          response: @escaping (Result<Response, Error>) -> Void = { _ in }) -> Callback
-    where ResultType == Result<Response, Error>, Error: Swift.Error {
+        where ResultType == Result<Response, Error>, Error: Swift.Error {
         return PollingCallback(scheduleQueue: scheduleQueue,
                                generator: self,
                                idleTimeInterval: idleTimeInterval,
@@ -374,12 +379,13 @@ public class Callback<ResultType> {
 }
 
 // MARK: - Hashable
+
 extension Callback: Hashable {
     public func hash(into hasher: inout Hasher) {
-        hashKey.map({ hasher.combine($0) }) ?? hasher.combine(ObjectIdentifier(self))
+        hashKey.map { hasher.combine($0) } ?? hasher.combine(ObjectIdentifier(self))
     }
 
-    public static func == (lhs: Callback, rhs: Callback) -> Bool {
+    public static func ==(lhs: Callback, rhs: Callback) -> Bool {
         switch (lhs.hashKey, rhs.hashKey) {
         case (.some(let a), .some(let b)):
             return a == b
@@ -418,6 +424,6 @@ private final class LazyGenerator<In, Out> {
     }
 
     func cached() -> Callback<Out> where In == Void {
-        return cached(Void())
+        return cached(())
     }
 }

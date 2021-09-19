@@ -1,9 +1,9 @@
 import Foundation
 import UIKit
 
-import Quick
 import Nimble
 import NSpry
+import Quick
 
 @testable import NCallback
 @testable import NCallbackTestHelpers
@@ -108,7 +108,7 @@ final class PendingCallbackSpec: QuickSpec {
                                 return deferred
                             }
                             actual2 = subject.current { _ in }
-                            actual2.onComplete({ result = $0 })
+                            actual2.onComplete { result = $0 }
                             closure?(2)
                         }
 
@@ -161,7 +161,7 @@ final class PendingCallbackSpec: QuickSpec {
                         var result: Int!
 
                         beforeEach {
-                            actual.onComplete({ result = $0 })
+                            actual.onComplete { result = $0 }
                             subject.complete(1)
                         }
 

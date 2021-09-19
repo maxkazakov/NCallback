@@ -1,9 +1,9 @@
 import Foundation
 import UIKit
 
-import Quick
 import Nimble
 import NSpry
+import Quick
 
 @testable import NCallback
 @testable import NCallbackTestHelpers
@@ -39,7 +39,7 @@ private final class SubjectWrapper<Value> {
         }
     }
 
-    lazy var stop: (Callback<Value>) -> Void = { [weak self] original in
+    lazy var stop: (Callback<Value>) -> Void = { [weak self] _ in
         self?.stopped = true
     }
 
@@ -78,7 +78,7 @@ final class CallbackSpec: QuickSpec {
 
                         describe("weakness") {
                             beforeEach {
-                                action(.weakness, { result = $0 })
+                                action(.weakness) { result = $0 }
                             }
 
                             context("when destructed before completion") {
@@ -114,7 +114,7 @@ final class CallbackSpec: QuickSpec {
 
                         describe("selfRetained") {
                             beforeEach {
-                                action(.selfRetained, { result = $0 })
+                                action(.selfRetained) { result = $0 }
                                 subject = nil
                             }
 
@@ -164,7 +164,7 @@ final class CallbackSpec: QuickSpec {
 
                         describe("repeatable") {
                             beforeEach {
-                                action(.repeatable(.weakness), { result = $0 })
+                                action(.repeatable(.weakness)) { result = $0 }
                             }
 
                             context("when destructed before completion") {
@@ -245,9 +245,9 @@ final class CallbackSpec: QuickSpec {
                         beforeEach {
                             events = []
 
-                            subject.beforeComplete({ _ in events.append(.beforeComplete) })
-                            subject.deferred({ _ in events.append(.deferred) })
-                            subject.onComplete({ _ in events.append(.onComplete) })
+                            subject.beforeComplete { _ in events.append(.beforeComplete) }
+                            subject.deferred { _ in events.append(.deferred) }
+                            subject.onComplete { _ in events.append(.onComplete) }
 
                             wrapper.action?(1)
                         }
@@ -265,9 +265,9 @@ final class CallbackSpec: QuickSpec {
 
                         context("when original value is greater then 0") {
                             beforeEach {
-                                subject.onComplete({ originalResult = $0 })
-                                mapped = subject.flatMap({ $0 > 0 })
-                                mapped.onComplete({ result = $0 })
+                                subject.onComplete { originalResult = $0 }
+                                mapped = subject.flatMap { $0 > 0 }
+                                mapped.onComplete { result = $0 }
 
                                 wrapper.action?(1)
                             }
@@ -287,9 +287,9 @@ final class CallbackSpec: QuickSpec {
 
                         context("when original value is greater then 0") {
                             beforeEach {
-                                subject.onComplete({ originalResult = $0 })
-                                mapped = subject.flatMap({ $0 < 0 })
-                                mapped.onComplete({ result = $0 })
+                                subject.onComplete { originalResult = $0 }
+                                mapped = subject.flatMap { $0 < 0 }
+                                mapped.onComplete { result = $0 }
 
                                 wrapper.action?(1)
                             }
@@ -319,11 +319,11 @@ final class CallbackSpec: QuickSpec {
 
                     context("when configured twice") {
                         beforeEach {
-                            subject.onComplete({ _ in })
+                            subject.onComplete { _ in }
                         }
 
                         it("should throw assert") {
-                            expect({ subject.onComplete({ _ in }) }).to(throwAssertion())
+                            expect({ subject.onComplete { _ in } }).to(throwAssertion())
                         }
                     }
 
@@ -337,11 +337,11 @@ final class CallbackSpec: QuickSpec {
 
                     context("when configured twice") {
                         beforeEach {
-                            subject.onComplete({ _ in })
+                            subject.onComplete { _ in }
                         }
 
                         it("should not throw assert; should clear completion callback after synced completions") {
-                            expect({ subject.onComplete({ _ in }) }).toNot(throwAssertion())
+                            expect({ subject.onComplete { _ in } }).toNot(throwAssertion())
                         }
                     }
 
@@ -355,11 +355,11 @@ final class CallbackSpec: QuickSpec {
 
                     context("when configured twice") {
                         beforeEach {
-                            subject.onComplete({ _ in })
+                            subject.onComplete { _ in }
                         }
 
                         it("should not throw assert; should clear completion callback after synced completions") {
-                            expect({ subject.onComplete({ _ in }) }).toNot(throwAssertion())
+                            expect({ subject.onComplete { _ in } }).toNot(throwAssertion())
                         }
                     }
 
@@ -378,22 +378,22 @@ final class CallbackSpec: QuickSpec {
 
                     commonEvents()
 
-                    lifecycle({ option, callback in
+                    lifecycle { option, callback in
                         subject.onComplete(options: option, callback)
-                    })
+                    }
 
-                    lifecycle({ option, callback in
+                    lifecycle { option, callback in
                         subject.beforeComplete(callback)
                         subject.oneWay(options: option)
-                    })
+                    }
 
                     context("when configured for the second time") {
                         beforeEach {
-                            subject.onComplete({ _ in })
+                            subject.onComplete { _ in }
                         }
 
                         it("should throw assert") {
-                            expect({ subject.onComplete({ _ in }) }).to(throwAssertion())
+                            expect({ subject.onComplete { _ in } }).to(throwAssertion())
                         }
 
                         context("when canceled") {
@@ -411,7 +411,7 @@ final class CallbackSpec: QuickSpec {
 
                             beforeEach {
                                 subject.cleanup()
-                                subject.onComplete(options: .selfRetained, { _ in  })
+                                subject.onComplete(options: .selfRetained) { _ in }
 
                                 saved = subject
                                 subject = nil
@@ -802,9 +802,9 @@ final class CallbackSpec: QuickSpec {
 
                     context("when no nils") {
                         beforeEach {
-                            subject.onComplete({ originalResult = $0 })
+                            subject.onComplete { originalResult = $0 }
                             mapped = subject.filterNils()
-                            mapped.onComplete({ result = $0 })
+                            mapped.onComplete { result = $0 }
 
                             wrapper.action?([1, 2, 3])
                         }
@@ -824,9 +824,9 @@ final class CallbackSpec: QuickSpec {
 
                     context("when has nils") {
                         beforeEach {
-                            subject.onComplete({ originalResult = $0 })
+                            subject.onComplete { originalResult = $0 }
                             mapped = subject.filterNils()
-                            mapped.onComplete({ result = $0 })
+                            mapped.onComplete { result = $0 }
 
                             wrapper.action?([1, nil, 2, nil, 3])
                         }
@@ -870,9 +870,9 @@ final class CallbackSpec: QuickSpec {
 
                     context("when no nils") {
                         beforeEach {
-                            subject.onComplete({ originalResult = $0 })
+                            subject.onComplete { originalResult = $0 }
                             mapped = subject.filterNils()
-                            mapped.onComplete({ result = $0 })
+                            mapped.onComplete { result = $0 }
 
                             wrapper.action?(.success([1, 2, 3]))
                         }
@@ -892,9 +892,9 @@ final class CallbackSpec: QuickSpec {
 
                     context("when has nils") {
                         beforeEach {
-                            subject.onComplete({ originalResult = $0 })
+                            subject.onComplete { originalResult = $0 }
                             mapped = subject.filterNils()
-                            mapped.onComplete({ result = $0 })
+                            mapped.onComplete { result = $0 }
 
                             wrapper.action?(.success([1, nil, 2, nil, 3]))
                         }
@@ -1161,7 +1161,7 @@ final class CallbackSpec: QuickSpec {
                                         }
                                     }
                                 }
-                                
+
                                 itBehavesLikeFirstWithError(false)
                             }
 
@@ -1176,9 +1176,9 @@ final class CallbackSpec: QuickSpec {
                         var mapped: ResultCallback<Int, TestError2>!
 
                         beforeEach {
-                            subject.onComplete({ originalResult = $0 })
-                            mapped = subject.mapError({ _ in return TestError2.anyError })
-                            mapped.onComplete({ result = $0 })
+                            subject.onComplete { originalResult = $0 }
+                            mapped = subject.mapError { _ in return TestError2.anyError }
+                            mapped.onComplete { result = $0 }
                         }
 
                         it("should be other instance") {
@@ -1262,9 +1262,9 @@ final class CallbackSpec: QuickSpec {
                         var mapped: ResultCallback<Bool, TestError>!
 
                         beforeEach {
-                            subject.onComplete({ originalResult = $0 })
-                            mapped = subject.map({ $0 > 0 })
-                            mapped.onComplete({ result = $0 })
+                            subject.onComplete { originalResult = $0 }
+                            mapped = subject.map { $0 > 0 }
+                            mapped.onComplete { result = $0 }
                         }
 
                         it("should be other instance") {
@@ -1348,9 +1348,9 @@ final class CallbackSpec: QuickSpec {
                         var mapped: Callback<Int>!
 
                         beforeEach {
-                            subject.onComplete({ originalResult = $0 })
-                            mapped = subject.recover({ $0 == .anyError1 ? 1 : 2 })
-                            mapped.onComplete({ result = $0 })
+                            subject.onComplete { originalResult = $0 }
+                            mapped = subject.recover { $0 == .anyError1 ? 1 : 2 }
+                            mapped.onComplete { result = $0 }
                         }
 
                         it("should be other instance") {
@@ -1434,9 +1434,9 @@ final class CallbackSpec: QuickSpec {
                         var mapped: Callback<Int>!
 
                         beforeEach {
-                            subject.onComplete({ originalResult = $0 })
+                            subject.onComplete { originalResult = $0 }
                             mapped = subject.recover(1)
-                            mapped.onComplete({ result = $0 })
+                            mapped.onComplete { result = $0 }
                         }
 
                         it("should be other instance") {
@@ -1520,9 +1520,9 @@ final class CallbackSpec: QuickSpec {
                         var mapped: Callback<Int?>!
 
                         beforeEach {
-                            subject.onComplete({ originalResult = $0 })
+                            subject.onComplete { originalResult = $0 }
                             mapped = subject.recoverNil()
-                            mapped.onComplete({ result = $0 })
+                            mapped.onComplete { result = $0 }
                         }
 
                         it("should be other instance") {
@@ -1608,9 +1608,9 @@ final class CallbackSpec: QuickSpec {
 
                         beforeEach {
                             value = (0...10).randomElement() ?? 3
-                            subject.onComplete({ originalResult = $0 })
-                            mapped = subject.recover({ value })
-                            mapped.onComplete({ result = $0 })
+                            subject.onComplete { originalResult = $0 }
+                            mapped = subject.recover { value }
+                            mapped.onComplete { result = $0 }
                         }
 
                         it("should be other instance") {
@@ -1698,7 +1698,7 @@ final class CallbackSpec: QuickSpec {
 
                     describe("weakness") {
                         beforeEach {
-                            subject.onComplete(options: .weakness, { result = $0 })
+                            subject.onComplete(options: .weakness) { result = $0 }
                         }
 
                         it("should receive result") {
@@ -1726,7 +1726,7 @@ final class CallbackSpec: QuickSpec {
 
                     describe("weakness") {
                         beforeEach {
-                            subject.onComplete(options: .weakness, { result = $0 })
+                            subject.onComplete(options: .weakness) { result = $0 }
                         }
 
                         it("should receive result") {

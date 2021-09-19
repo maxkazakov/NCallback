@@ -1,6 +1,6 @@
 import Foundation
 
-private func makeVoid() -> Void {
+private func makeVoid() {
 }
 
 private func makeVoid<T>(_: T) -> Void {

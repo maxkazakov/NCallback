@@ -1,9 +1,9 @@
 import Foundation
 import UIKit
 
-import Quick
 import Nimble
 import NSpry
+import Quick
 
 @testable import NCallback
 @testable import NCallbackTestHelpers
@@ -27,7 +27,7 @@ final class PendingCallback_VoidSpec: QuickSpec {
                         subject = .init()
 
                         for _ in 0..<5 {
-                            subject.current({ _ in }).onComplete {
+                            subject.current { _ in }.onComplete {
                                 result.append($0)
                             }
                         }
@@ -52,7 +52,7 @@ final class PendingCallback_VoidSpec: QuickSpec {
                         subject = .init()
 
                         for _ in 0..<5 {
-                            subject.current({ _ in }).onComplete {
+                            subject.current { _ in }.onComplete {
                                 result.append($0)
                             }
                         }
@@ -61,7 +61,7 @@ final class PendingCallback_VoidSpec: QuickSpec {
                     }
 
                     it("should receive result") {
-                        expect(result.compactMap({ try? $0.get() }).count) == 5
+                        expect(result.compactMap { try? $0.get() }.count) == 5
                     }
                 }
 
@@ -75,7 +75,7 @@ final class PendingCallback_VoidSpec: QuickSpec {
                         subject = .init()
 
                         for _ in 0..<5 {
-                            subject.current({ _ in }).onComplete {
+                            subject.current { _ in }.onComplete {
                                 result.append($0)
                             }
                         }
@@ -98,7 +98,7 @@ final class PendingCallback_VoidSpec: QuickSpec {
                         subject = .init()
 
                         for _ in 0..<5 {
-                            subject.current({ _ in }).onComplete {
+                            subject.current { _ in }.onComplete {
                                 result.append($0)
                             }
                         }

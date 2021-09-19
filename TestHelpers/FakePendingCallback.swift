@@ -5,8 +5,8 @@ import NSpry
 
 public typealias FakeResultPendingCallback<Response, Error: Swift.Error> = FakePendingCallback<Result<Response, Error>>
 
-final
-public class FakePendingCallback<Response>: PendingCallback<Response>, Spryable {
+public final
+class FakePendingCallback<Response>: PendingCallback<Response>, Spryable {
     public enum ClassFunction: String, StringRepresentable {
         case empty
     }
@@ -16,7 +16,7 @@ public class FakePendingCallback<Response>: PendingCallback<Response>, Spryable 
     }
 
     public var closure: ServiceClosure?
-    public override func current(_ closure: @escaping ServiceClosure = { _ in }) -> Callback {
+    override public func current(_ closure: @escaping ServiceClosure = { _ in }) -> Callback {
         self.closure = closure
         return spryify()
     }

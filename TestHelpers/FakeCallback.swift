@@ -1,7 +1,7 @@
 import Foundation
-import NSpry
 import NCallback
 import NQueue
+import NSpry
 
 @testable import NCallback
 
@@ -105,7 +105,7 @@ final class FakeCallback<ResultType>: Callback<ResultType>, Spryable {
                                            minimumWaitingTime: TimeInterval? = nil,
                                            shouldRepeat: @escaping (Result<Response, Error>) -> Bool = { _ in false },
                                            response: @escaping (Result<Response, Error>) -> Void = { _ in }) -> Callback<Result<Response, Error>>
-    where ResultType == Result<Response, Error> {
+        where ResultType == Result<Response, Error> {
         return spryify(arguments: scheduleQueue, retryCount, idleTimeInterval, minimumWaitingTime, shouldRepeat, response)
     }
 
