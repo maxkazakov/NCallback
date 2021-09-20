@@ -10,7 +10,7 @@ Pod::Spec.new do |spec|
     spec.author           = { "Nikita Konopelko" => "nik.sativa@gmail.com" }
     spec.social_media_url = "https://www.facebook.com/Nik.Sativa"
 
-    spec.ios.deployment_target = "10.0"
+    spec.ios.deployment_target = "12.0"
     spec.swift_version = '5.0'
 
     spec.source_files = 'TestHelpers/**/*.swift'
@@ -22,13 +22,14 @@ Pod::Spec.new do |spec|
 
     spec.frameworks = 'XCTest', 'Foundation'
 
-    spec.scheme = {
-      :code_coverage => true
-    }
+#    spec.scheme = {
+#      :code_coverage => true
+#    }
 
     spec.test_spec 'Tests' do |tests|
         tests.dependency 'Nimble'
         tests.dependency 'Quick'
+        tests.dependency 'NSpry_Nimble'
         
         tests.frameworks = 'XCTest', 'Foundation'
 
