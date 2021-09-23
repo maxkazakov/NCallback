@@ -63,6 +63,37 @@ public class Callback<ResultType> {
         return self
     }
 
+    // MARK: - assign
+    public func assign(to variable: inout AnyObject?) -> Callback {
+        variable = self
+        return self
+    }
+
+    public func assign(to variable: inout AnyObject) -> Callback {
+        variable = self
+        return self
+    }
+
+    public func assign(to variable: inout Any?) -> Callback {
+        variable = self
+        return self
+    }
+
+    public func assign(to variable: inout Any) -> Callback {
+        variable = self
+        return self
+    }
+
+    public func assign(to variable: inout Callback?) -> Callback {
+        variable = self
+        return self
+    }
+
+    public func assign(to variable: inout Callback) -> Callback {
+        variable = self
+        return self
+    }
+
     // MARK: - completion
 
     public func complete(_ result: ResultType) {
