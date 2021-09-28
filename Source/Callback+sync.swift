@@ -4,6 +4,15 @@ import Foundation
 public func sync<T>(_ callback: Callback<T>,
                     seconds: Double? = nil,
                     timeoutResult timeout: @autoclosure () -> T) -> T {
+    return sync(callback,
+                seconds: seconds,
+                timeoutResult: timeout)
+}
+
+@discardableResult
+public func sync<T>(_ callback: Callback<T>,
+                    seconds: Double? = nil,
+                    timeoutResult timeout: () -> T) -> T {
     let semaphore = DispatchSemaphore(value: 0)
     var result: T!
 
