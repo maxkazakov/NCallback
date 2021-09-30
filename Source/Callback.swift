@@ -300,18 +300,6 @@ public class Callback<ResultType> {
 
     // MARK: - ResultCallback
 
-    func validate<Response, Error>(_ mapper: @escaping (Response) -> ResultType) -> Callback<ResultType>
-    where ResultType == Result<Response, Error>, Error: Swift.Error {
-        return flatMap {
-            switch $0 {
-            case .success(let value):
-                return mapper(value)
-            case .failure(let error):
-                return .failure(error)
-            }
-        }
-    }
-
     public func complete<Response, Error: Swift.Error>(_ response: Response) where ResultType == Result<Response, Error> {
         complete(.success(response))
     }
