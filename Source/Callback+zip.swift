@@ -60,7 +60,7 @@ public func zip<ResponseA, ResponseB, Error: Swift.Error>(_ lhs: ResultCallback<
                     let result: (ResponseA, ResponseB) = (a, b)
                     original?.complete(result)
                 case (_, .failure(let a)),
-                     (.failure(let a), _):
+                    (.failure(let a), _):
                     original?.complete(a)
                 }
             } else if let a = a {
@@ -100,4 +100,31 @@ public func zip<ResponseA, ResponseB, Error: Swift.Error>(_ lhs: ResultCallback<
 
     return .init(start: startTask,
                  stop: stopTask)
+}
+
+public func zipTuple<ResponseA, ResponseB>(_ lhs: Callback<ResponseA>,
+                                           _ rhs: Callback<ResponseB>) -> Callback<(ResponseA, ResponseB)> {
+    var a: ResponseA?
+    var b: ResponseB?
+
+    let startTask: Callback<(ResponseA, ResponseB)>.ServiceClosure = { original in
+        let check = { [weak original] in
+            if let a = a, let b = b {
+                let result = (a, b)
+                original?.complete(result)
+            }
+        }
+
+        lhs.onComplete(options: .weakness) { result in
+            a = result
+            check()
+        }
+
+        rhs.onComplete(options: .weakness) { result in
+            b = result
+            check()
+        }
+    }
+
+    return .init(start: startTask)
 }

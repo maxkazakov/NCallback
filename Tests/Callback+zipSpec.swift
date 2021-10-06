@@ -20,7 +20,7 @@ final class Callback_ZipSpec: QuickSpec {
                 beforeEach {
                     subject = .init()
                     subject2 = .init()
-                    zipped = zip(subject.real, subject2.real)
+                    zipped = zipTuple(subject.real, subject2.real)
                 }
 
                 afterEach {

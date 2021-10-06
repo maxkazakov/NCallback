@@ -526,7 +526,7 @@ final class CallbackSpec: QuickSpec {
                         subject2 = .init(start: wrapper2.start,
                                          stop: wrapper2.stop)
 
-                        zipped = zip(subject, subject2)
+                        zipped = zipTuple(subject, subject2)
                     }
 
                     afterEach {
