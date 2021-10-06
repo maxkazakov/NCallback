@@ -232,9 +232,14 @@ public class Callback<ResultType> {
         copy.hashKey = hashKey
 
         let originalCallback = completeCallback
-        completeCallback = { [weak copy] result in
+        completeCallback = { [weak copy, weak self] result in
             originalCallback?(result)
-            copy?.complete(mapper(result))
+
+            if let copy = copy {
+                (self?.taskQueue ?? copy.taskQueue).forceAsync {
+                    copy.complete(mapper(result))
+                }
+            }
         }
 
         options = .repeatable(.weakness)
@@ -245,7 +250,9 @@ public class Callback<ResultType> {
 
     public func map<NewResponse, Response, Error: Swift.Error>(_ mapper: @escaping (Response) -> NewResponse) -> ResultCallback<NewResponse, Error>
     where ResultType == Result<Response, Error> {
-        return flatMap { return $0.map(mapper) }
+        return flatMap {
+            return $0.map(mapper)
+        }
     }
 
     public func tryMap<NewResponse, Response>(_ mapper: @escaping (Response) throws -> NewResponse) -> ResultCallback<NewResponse, Swift.Error>
@@ -445,5 +452,22 @@ private final class LazyGenerator<In, Out> {
 
     func cached() -> Callback<Out> where In == Void {
         return cached(())
+    }
+}
+
+private extension DelayedQueue {
+    func forceAsync(_ workItem: @escaping () -> Void) {
+        switch self {
+        case .absent:
+            workItem()
+        case .sync(let queue):
+            queue.async(execute: workItem)
+        case .async(let queue):
+            queue.async(execute: workItem)
+        case .asyncAfter(_, let queue):
+            queue.async(execute: workItem)
+        case .asyncAfterWithFlags(_, _, let queue):
+            queue.async(execute: workItem)
+        }
     }
 }

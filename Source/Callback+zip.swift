@@ -1,35 +1,12 @@
 import Foundation
 
-public func zip<ResponseA, ResponseB>(_ lhs: Callback<ResponseA>,
-                                      _ rhs: Callback<ResponseB>) -> Callback<(ResponseA, ResponseB)> {
-    var a: ResponseA?
-    var b: ResponseB?
-
-    let startTask: Callback<(ResponseA, ResponseB)>.ServiceClosure = { original in
-        let check = { [weak original] in
-            if let a = a, let b = b {
-                let result = (a, b)
-                original?.complete(result)
-            }
-        }
-
-        lhs.onComplete(options: .weakness) { result in
-            a = result
-            check()
-        }
-
-        rhs.onComplete(options: .weakness) { result in
-            b = result
-            check()
-        }
-    }
-
-    return .init(start: startTask)
-}
-
 private enum State<R> {
     case pending
     case value(R)
+}
+
+public func zip<Response>(_ input: Callback<Response>...) -> Callback<[Response]> {
+    return zip(input)
 }
 
 public func zip<Response>(_ input: [Callback<Response>]) -> Callback<[Response]> {
