@@ -60,7 +60,7 @@ public func zip<ResponseA, ResponseB, Error: Swift.Error>(_ lhs: ResultCallback<
                     let result: (ResponseA, ResponseB) = (a, b)
                     original?.complete(result)
                 case (_, .failure(let a)),
-                    (.failure(let a), _):
+                     (.failure(let a), _):
                     original?.complete(a)
                 }
             } else if let a = a {
