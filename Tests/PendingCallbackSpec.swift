@@ -40,11 +40,13 @@ final class PendingCallbackSpec: QuickSpec {
                         }
                     }
 
+#if arch(x86_64) && canImport(Darwin)
                     context("when completing") {
                         it("should throw assertion") {
                             expect { subject.complete(1) }.to(throwAssertion())
                         }
                     }
+#endif
                 }
             }
 

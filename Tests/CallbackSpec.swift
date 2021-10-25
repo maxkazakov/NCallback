@@ -317,6 +317,7 @@ final class CallbackSpec: QuickSpec {
                         }
                     }
 
+#if arch(x86_64) && canImport(Darwin)
                     context("when configured twice") {
                         beforeEach {
                             subject.onComplete { _ in }
@@ -326,6 +327,7 @@ final class CallbackSpec: QuickSpec {
                             expect({ subject.onComplete { _ in } }).to(throwAssertion())
                         }
                     }
+#endif
 
                     commonEvents()
                 }
@@ -335,6 +337,7 @@ final class CallbackSpec: QuickSpec {
                         subject = .init(result: 1)
                     }
 
+#if arch(x86_64) && canImport(Darwin)
                     context("when configured twice") {
                         beforeEach {
                             subject.onComplete { _ in }
@@ -344,6 +347,7 @@ final class CallbackSpec: QuickSpec {
                             expect({ subject.onComplete { _ in } }).toNot(throwAssertion())
                         }
                     }
+#endif
 
                     commonEvents()
                 }
@@ -353,6 +357,7 @@ final class CallbackSpec: QuickSpec {
                         subject = .init(result: { return 1 })
                     }
 
+#if arch(x86_64) && canImport(Darwin)
                     context("when configured twice") {
                         beforeEach {
                             subject.onComplete { _ in }
@@ -362,6 +367,7 @@ final class CallbackSpec: QuickSpec {
                             expect({ subject.onComplete { _ in } }).toNot(throwAssertion())
                         }
                     }
+#endif
 
                     commonEvents()
                 }
@@ -392,9 +398,11 @@ final class CallbackSpec: QuickSpec {
                             subject.onComplete { _ in }
                         }
 
+#if arch(x86_64) && canImport(Darwin)
                         it("should throw assert") {
                             expect({ subject.onComplete { _ in } }).to(throwAssertion())
                         }
+#endif
 
                         context("when canceled") {
                             beforeEach {
