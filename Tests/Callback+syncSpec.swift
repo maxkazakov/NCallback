@@ -104,7 +104,7 @@ final class Callback_syncSpec: QuickSpec {
                 }
             }
 
-#if arch(x86_64) && canImport(Darwin)
+            #if arch(x86_64) && canImport(Darwin)
             context("when timeout is less than or equal zero") {
                 it("should throw assert") {
                     expect {
@@ -114,7 +114,7 @@ final class Callback_syncSpec: QuickSpec {
                     }.to(throwAssertion())
                 }
             }
-#endif
+            #endif
         }
     }
 }
