@@ -388,13 +388,12 @@ public class Callback<ResultType> {
         return Callback { return .failure(result()) }
     }
 
-    public func polling<Response, Error>(scheduleQueue: Queueable? = nil,
-                                         retryCount: Int = 5,
-                                         idleTimeInterval: TimeInterval = 10,
-                                         minimumWaitingTime: TimeInterval? = nil,
-                                         shouldRepeat: @escaping (Result<Response, Error>) -> Bool = { _ in false },
-                                         response: @escaping (Result<Response, Error>) -> Void = { _ in }) -> Callback
-        where ResultType == Result<Response, Error>, Error: Swift.Error {
+    public func polling(scheduleQueue: Queueable? = nil,
+                        retryCount: Int,
+                        idleTimeInterval: TimeInterval,
+                        minimumWaitingTime: TimeInterval? = nil,
+                        shouldRepeat: @escaping (ResultType) -> Bool = { _ in false },
+                        response: @escaping (ResultType) -> Void = { _ in }) -> Callback {
         return PollingCallback(scheduleQueue: scheduleQueue,
                                generator: self,
                                idleTimeInterval: idleTimeInterval,

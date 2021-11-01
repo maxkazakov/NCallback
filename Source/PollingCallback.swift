@@ -5,9 +5,7 @@ private let defaultScheduleQueue: Queueable = Queue.custom(label: "PollingCallba
                                                            qos: .utility,
                                                            attributes: .concurrent)
 
-final class PollingCallback<Response, Error: Swift.Error> {
-    typealias ResultType = Result<Response, Error>
-
+final class PollingCallback<ResultType> {
     private let generator: () -> Callback<ResultType>
     private var cached: Callback<ResultType>?
     private var isCanceled: Bool = false
@@ -28,7 +26,7 @@ final class PollingCallback<Response, Error: Swift.Error> {
          shouldRepeat: @escaping (ResultType) -> Bool = { _ in false },
          retryCount: Int = 5,
          minimumWaitingTime: TimeInterval? = nil,
-         response: @escaping (Result<Response, Error>) -> Void = { _ in }) {
+         response: @escaping (ResultType) -> Void = { _ in }) {
         assert(retryCount > 0, "do you really need polling? seems like `retryCount <= 0` is ignoring polling")
 
         self.scheduleQueue = scheduleQueue ?? defaultScheduleQueue
@@ -86,18 +84,13 @@ final class PollingCallback<Response, Error: Swift.Error> {
             if self.canRepeat(retryCount), self.shouldRepeat(result) {
                 self.schedulePolling(actual, retryCount: retryCount - 1)
             } else {
-                switch result {
-                case .success:
-                    actual.complete(result)
-                case .failure(let error):
-                    actual.complete(.failure(error))
-                }
+                actual.complete(result)
             }
         }
     }
 
     private func schedulePolling(_ actual: Callback<ResultType>, retryCount: Int) {
-        scheduleQueue.asyncAfter(deadline: .now() + idleTimeInterval) { [unowned self] in
+        scheduleQueue.asyncAfter(deadline: .now() + max(idleTimeInterval, .leastNormalMagnitude)) { [unowned self] in
             self.startPolling(actual, retryCount: retryCount)
         }
     }

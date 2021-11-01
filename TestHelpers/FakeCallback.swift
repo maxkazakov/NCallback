@@ -99,13 +99,12 @@ final class FakeCallback<ResultType>: Callback<ResultType>, Spryable {
         return spryify(arguments: result)
     }
 
-    override func polling<Response, Error>(scheduleQueue: Queueable? = nil,
-                                           retryCount: Int = 5,
-                                           idleTimeInterval: TimeInterval = 10,
-                                           minimumWaitingTime: TimeInterval? = nil,
-                                           shouldRepeat: @escaping (Result<Response, Error>) -> Bool = { _ in false },
-                                           response: @escaping (Result<Response, Error>) -> Void = { _ in }) -> Callback<Result<Response, Error>>
-        where ResultType == Result<Response, Error> {
+    override func polling(scheduleQueue: Queueable? = nil,
+                          retryCount: Int,
+                          idleTimeInterval: TimeInterval,
+                          minimumWaitingTime: TimeInterval? = nil,
+                          shouldRepeat: @escaping (ResultType) -> Bool = { _ in false },
+                          response: @escaping (ResultType) -> Void = { _ in }) -> Callback<ResultType> {
         return spryify(arguments: scheduleQueue, retryCount, idleTimeInterval, minimumWaitingTime, shouldRepeat, response)
     }
 
