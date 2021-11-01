@@ -5,8 +5,7 @@ import NSpry
 
 public typealias FakeResultPendingCallback<Response, Error: Swift.Error> = FakePendingCallback<Result<Response, Error>>
 
-public final
-class FakePendingCallback<Response>: PendingCallback<Response>, Spryable {
+public final class FakePendingCallback<Response>: PendingCallback<Response>, Spryable {
     public enum ClassFunction: String, StringRepresentable {
         case empty
     }
