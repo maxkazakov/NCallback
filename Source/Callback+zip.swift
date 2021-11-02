@@ -47,9 +47,9 @@ public func zip<Response>(_ input: [Callback<Response>]) -> Callback<[Response]>
                  stop: stopTask)
 }
 
-public func zip<ResponseA, ResponseB, Error: Swift.Error>(_ lhs: ResultCallback<ResponseA, Error>,
-                                                          _ rhs: ResultCallback<ResponseB, Error>) -> ResultCallback<(ResponseA, ResponseB), Error> {
-    let startTask: ResultCallback<(ResponseA, ResponseB), Error>.ServiceClosure = { original in
+public func zipErroredTuple<ResponseA, ResponseB, Error: Swift.Error>(lhs: ResultCallback<ResponseA, Error>,
+                                                                      rhs: ResultCallback<ResponseB, Error>) -> ResultCallback<(lhs: ResponseA, rhs: ResponseB), Error> {
+    let startTask: ResultCallback<(lhs: ResponseA, rhs: ResponseB), Error>.ServiceClosure = { original in
         var a: Result<ResponseA, Error>?
         var b: Result<ResponseB, Error>?
 
@@ -93,7 +93,7 @@ public func zip<ResponseA, ResponseB, Error: Swift.Error>(_ lhs: ResultCallback<
         }
     }
 
-    let stopTask: ResultCallback<(ResponseA, ResponseB), Error>.ServiceClosure = { _ in
+    let stopTask: ResultCallback<(lhs: ResponseA, rhs: ResponseB), Error>.ServiceClosure = { _ in
         lhs.cleanup()
         rhs.cleanup()
     }
