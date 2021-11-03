@@ -943,8 +943,8 @@ final class CallbackSpec: QuickSpec {
                                         stop: wrapper.stop)
                     }
 
-                    describe("zip") {
-                        var result: Result<(Int, Bool), TestError>!
+                    describe("zipErroredTuple") {
+                        var result: Result<(lhs: Int, rhs: Bool), TestError>!
                         var wrapper2: ResultSubjectWrapper<Bool, TestError>!
                         var subject2: ResultCallback<Bool, TestError>! {
                             get {
@@ -955,14 +955,14 @@ final class CallbackSpec: QuickSpec {
                             }
                         }
 
-                        var zipped: ResultCallback<(Int, Bool), TestError>!
+                        var zipped: ResultCallback<(lhs: Int, rhs: Bool), TestError>!
 
                         beforeEach {
                             wrapper2 = .init()
                             subject2 = .init(start: wrapper2.start,
                                              stop: wrapper2.stop)
 
-                            zipped = zip(subject, subject2)
+                            zipped = zipErroredTuple(lhs: subject, rhs: subject2)
                         }
 
                         afterEach {
