@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
     spec.name         = "NCallbackTestHelpers"
-    spec.version      = "2.7.2"
+    spec.version      = "2.8.3"
     spec.summary      = "NCallback - wrapped closures"
 
     spec.source       = { :git => "git@github.com:NikSativa/NCallback.git" }
@@ -17,8 +17,6 @@ Pod::Spec.new do |spec|
 
     spec.dependency 'NSpry'
     spec.dependency 'NCallback'
-    spec.dependency 'NQueue'
-    spec.dependency 'NQueueTestHelpers'
 
     spec.frameworks = 'XCTest', 'Foundation'
 
@@ -30,6 +28,9 @@ Pod::Spec.new do |spec|
         tests.dependency 'Nimble'
         tests.dependency 'Quick'
         tests.dependency 'NSpry_Nimble'
+
+        tests.dependency 'NQueue'
+        tests.dependency 'NQueueTestHelpers'
 
         tests.frameworks = 'XCTest', 'Foundation'
 
