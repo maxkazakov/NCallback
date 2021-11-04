@@ -47,7 +47,7 @@ final class PollingCallback<ResultType> {
         }
     }
 
-    func cancel() {
+    private func cancel() {
         isCanceled = true
         cached = nil
     }

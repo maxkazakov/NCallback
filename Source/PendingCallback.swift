@@ -38,23 +38,25 @@ public class PendingCallback<ResultType> {
             return computed
         }
 
-        return .init(start: { actual in
+        return .init(start: { [weak self] actual in
+            guard let self = self else {
+                return
+            }
+            
             self.mutex.sync {
                 if self.isInProgress {
                     original.deferred(actual.complete)
                 } else {
                     self.isInProgress = true
-                    original.beforeComplete { [weak self] in
+
+                    original.onComplete(options: .weakness) { [weak self, unowned actual] result in
                         self?.cached = nil
                         self?.isInProgress = false
-                        self?.beforeCallback?($0)
-                    }
 
-                    original.deferred { [weak self] in
-                        self?.deferredCallback?($0)
+                        self?.beforeCallback?(result)
+                        actual.complete(result)
+                        self?.deferredCallback?(result)
                     }
-
-                    actual.waitCompletion(of: original)
                 }
             }
         })
@@ -71,6 +73,7 @@ public class PendingCallback<ResultType> {
     }
 
     public func cancel() {
+        cached?.cleanup()
         cached = nil
     }
 
