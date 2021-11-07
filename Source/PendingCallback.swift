@@ -42,7 +42,7 @@ public class PendingCallback<ResultType> {
             guard let self = self else {
                 return
             }
-            
+
             self.mutex.sync {
                 if self.isInProgress {
                     original.deferred(actual.complete)
