@@ -49,12 +49,12 @@ public class PendingCallback<ResultType> {
                 } else {
                     self.isInProgress = true
 
-                    original.onComplete(options: .weakness) { [weak self, unowned actual] result in
+                    original.onComplete(options: .weakness) { [weak self, weak actual] result in
                         self?.cached = nil
                         self?.isInProgress = false
 
                         self?.beforeCallback?(result)
-                        actual.complete(result)
+                        actual?.complete(result)
                         self?.deferredCallback?(result)
                     }
                 }
