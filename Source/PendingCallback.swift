@@ -8,18 +8,33 @@ public class PendingCallback<ResultType> {
     public typealias ServiceClosure = Callback.ServiceClosure
     public typealias Completion = Callback.Completion
 
+    @Atomic
+    private var isInProgress: Bool = false
+
+    @Atomic
+    private var cached: Callback?
+
     private var beforeCallback: Completion?
     private var deferredCallback: Completion?
-
-    private var isInProgress: Bool = false
-    private var cached: Callback?
-    private let mutex: Mutexing = Mutex.unfair
 
     public var isPending: Bool {
         return cached != nil
     }
 
     public init() {
+        _isInProgress = Atomic(wrappedValue: false,
+                               mutex: Mutex.pthread(.recursive),
+                               read: .sync,
+                               write: .sync)
+
+        _cached = Atomic(wrappedValue: nil,
+                         mutex: Mutex.pthread(.recursive),
+                         read: .sync,
+                         write: .sync)
+    }
+
+    public func current(_ closure: @escaping ServiceClosure) -> Callback {
+        return current(.init(start: closure))
     }
 
     public func current(_ closure: @autoclosure () -> Callback) -> Callback {
@@ -27,49 +42,44 @@ public class PendingCallback<ResultType> {
     }
 
     public func current(_ closure: () -> Callback) -> Callback {
-        let original: Callback = mutex.sync {
+        return $cached.mutate { cached in
             let computed: Callback
-            if let cached = self.cached {
+            if let cached = cached {
                 computed = cached
             } else {
                 computed = closure()
-                self.cached = computed
-            }
-            return computed
-        }
-
-        return .init(start: { [weak self] actual in
-            guard let self = self else {
-                return
+                cached = computed
             }
 
-            self.mutex.sync {
+            return .init(start: { [weak self, computed] actual in
+                guard let self = self else {
+                    return
+                }
+
                 if self.isInProgress {
-                    original.deferred(actual.complete)
+                    computed.deferred(actual.complete)
                 } else {
                     self.isInProgress = true
 
-                    original.onComplete(options: .weakness) { [weak self, weak actual] result in
-                        self?.cached = nil
+                    computed.beforeComplete { [weak self] result in
                         self?.isInProgress = false
-
+                        self?.cached = nil
                         self?.beforeCallback?(result)
-                        actual?.complete(result)
+                    }
+                    .deferred { [weak self] result in
                         self?.deferredCallback?(result)
                     }
+                    .onComplete(options: .weakness) { result in
+                        actual.complete(result)
+                    }
                 }
-            }
-        })
-    }
-
-    public func current(_ closure: @escaping ServiceClosure) -> Callback {
-        current(.init(start: closure))
+            })
+        }
     }
 
     public func complete(_ result: ResultType) {
-        assert(cached != nil, "no one will receive this event while no subscribers")
+        assert(cached != nil, "nobody will receive this event while cache is empty")
         cached?.complete(result)
-        cached = nil
     }
 
     public func cancel() {
@@ -79,28 +89,21 @@ public class PendingCallback<ResultType> {
 
     @discardableResult
     public func deferred(_ callback: @escaping Completion) -> Self {
-        mutex.sync {
-            let originalCallback = deferredCallback
-
-            deferredCallback = { result in
-                originalCallback?(result)
-                callback(result)
-            }
+        let originalCallback = deferredCallback
+        deferredCallback = { result in
+            originalCallback?(result)
+            callback(result)
         }
         return self
     }
 
     @discardableResult
     public func beforeComplete(_ callback: @escaping Completion) -> Self {
-        mutex.sync {
-            let originalCallback = beforeCallback
-
-            beforeCallback = { result in
-                originalCallback?(result)
-                callback(result)
-            }
+        let originalCallback = beforeCallback
+        beforeCallback = { result in
+            originalCallback?(result)
+            callback(result)
         }
-
         return self
     }
 }
