@@ -53,6 +53,7 @@ public class PendingCallback<ResultType> {
 
             return .init(start: { [weak self, computed] actual in
                 guard let self = self else {
+                    actual.waitCompletion(of: computed)
                     return
                 }
 
@@ -83,6 +84,7 @@ public class PendingCallback<ResultType> {
     }
 
     public func cancel() {
+        isInProgress = false
         cached?.cleanup()
         cached = nil
     }

@@ -49,10 +49,11 @@ final class PollingCallback<ResultType> {
 
     private func cancel() {
         isCanceled = true
+        cached?.cleanup()
         cached = nil
     }
 
-    private func new() -> Callback<ResultType> {
+    private func newOrCached() -> Callback<ResultType> {
         let new = generator()
         cached = new
         return new
@@ -78,7 +79,16 @@ final class PollingCallback<ResultType> {
             return
         }
 
-        new().onComplete(options: .repeatable(.weakness)) { [unowned self] result in
+        newOrCached().onComplete(options: .repeatable(.weakness)) { [unowned self, weak actual] result in
+            guard let actual = actual else {
+                assert(false, "we hit a snag!")
+                return
+            }
+
+            if self.isCanceled {
+                return
+            }
+
             self.response(result)
 
             if self.canRepeat(retryCount), self.shouldRepeat(result) {
@@ -90,8 +100,10 @@ final class PollingCallback<ResultType> {
     }
 
     private func schedulePolling(_ actual: Callback<ResultType>, retryCount: Int) {
-        scheduleQueue.asyncAfter(deadline: .now() + max(idleTimeInterval, .leastNormalMagnitude)) { [unowned self] in
-            self.startPolling(actual, retryCount: retryCount)
+        scheduleQueue.asyncAfter(deadline: .now() + max(idleTimeInterval, .leastNormalMagnitude)) { [self, weak actual] in
+            if let actual = actual {
+                self.startPolling(actual, retryCount: retryCount)
+            }
         }
     }
 }
