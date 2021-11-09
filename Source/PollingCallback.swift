@@ -53,7 +53,7 @@ final class PollingCallback<ResultType> {
         cached = nil
     }
 
-    private func newOrCached() -> Callback<ResultType> {
+    private func cachingNew() -> Callback<ResultType> {
         let new = generator()
         cached = new
         return new
@@ -79,7 +79,7 @@ final class PollingCallback<ResultType> {
             return
         }
 
-        newOrCached().onComplete(options: .repeatable(.weakness)) { [unowned self, weak actual] result in
+        cachingNew().onComplete(options: .repeatable(.weakness)) { [unowned self, weak actual] result in
             guard let actual = actual else {
                 assert(false, "we hit a snag!")
                 return
